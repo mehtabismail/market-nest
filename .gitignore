@@ -14,3 +14,7 @@ coverage
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# Env backups (may contain secrets)
+.env.bak.*
+.env.backup
