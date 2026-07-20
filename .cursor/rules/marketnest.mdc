@@ -1,0 +1,48 @@
+---
+description: MarketNest platform standards — architecture, scale, anonymity, patterns
+alwaysApply: true
+---
+
+# MarketNest — mandatory development standards
+
+Source of truth: `MarketNest_Architecture_v2.pdf`, `MarketNest_UserStories_v2.pdf`, `docs/ARCHITECTURE_PRINCIPLES.md`, `AGENTS.md`.
+
+## Stack (do not substitute without explicit approval)
+
+- Monorepo: Turborepo + **npm workspaces**
+- Frontend: Next.js 14 App Router, Tailwind, shadcn/ui, Vercel
+- API: NestJS (single gateway), Prisma, class-validator
+- Data: Supabase PostgreSQL + RLS + Auth + Storage + pgvector
+- Cache/queue: Upstash Redis, BullMQ
+- Payments: Stripe + COD
+
+## Scale & performance (1M+ concurrent baseline)
+
+- CDN-first: ISR (60s) for product/category/home; origin only for dynamic/auth
+- Stateless API; session/cart/rate-limits in Redis only
+- Async anything >200ms (email, embeddings, exports) via BullMQ
+- DB: pooled connections (PgBouncer), indexes on hot columns, read replicas later
+- No N+1 queries; paginate lists (default 20); select only needed columns
+- Images: Supabase CDN transforms + Next.js Image (WebP)
+
+## v2 business rules (non-negotiable)
+
+1. **Seller anonymity**: Buyers never receive `seller_id`, store name, slug, or contact. Use `BuyerProductDTO` + `ProductSerializerInterceptor` on all buyer/guest routes. Buyer app must not import seller types from `shared-types`.
+2. **Product ownership**: `seller_owned` | `platform_owned` | `seller_assigned`. Platform-owned ? admin fulfilment, no payout. Only `platform_owned` shows "MarketNest Official" badge.
+3. **Roles**: `superadmin` | `seller` | `buyer`. Sellers created by admin only. Guest cart in Redis (7d TTL), merge at checkout.
+
+## Code patterns
+
+- Domain modules in NestJS (`auth`, `products`, `orders`, …); thin controllers, logic in services
+- DTOs + validation on every API input; typed responses; no `any`
+- RLS is primary isolation; API guards are secondary (RBAC `@Roles()`)
+- Shared types in `packages/shared-types`; buyer barrel excludes seller DTOs
+- UI tokens from design system (`packages/ui`); match `MarketNest_UI_Designs.html`
+- Secrets only in env; never commit `.env`
+
+## When adding features
+
+- Map to a user story ID (e.g. BU-05, SA-11) in PR/commit context
+- P1 before P2/P3 unless user says otherwise
+- Add migration + RLS policy with schema changes
+- Update `.env.example` when new env vars are required

@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketNest — Complete UI Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple:    #534AB7;
+  --purple-l:  #EEEDFE;
+  --purple-d:  #3C3489;
+  --teal:      #0F6E56;
+  --teal-l:    #E1F5EE;
+  --teal-d:    #085041;
+  --blue:      #185FA5;
+  --blue-l:    #E6F1FB;
+  --coral:     #D85A30;
+  --coral-l:   #FAECE7;
+  --amber:     #BA7517;
+  --amber-l:   #FAEEDA;
+  --green:     #3B6D11;
+  --green-l:   #EAF3DE;
+  --gray:      #5F5E5A;
+  --gray-l:    #F1EFE8;
+  --gray-d:    #2C2C2A;
+  --border:    #D3D1C7;
+  --white:     #FFFFFF;
+  --bg:        #F8F7F4;
+
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--gray-d);
+  min-height: 100vh;
+}
+
+/* ── PORTAL SWITCHER ── */
+.portal-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--gray-d);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.portal-logo {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  margin-right: 32px;
+  letter-spacing: -0.5px;
+}
+.portal-logo span { color: var(--teal); }
+.portal-tab {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+}
+.portal-tab:hover { color: rgba(255,255,255,0.8); }
+.portal-tab.active { color: white; border-bottom: 2px solid var(--teal); }
+.portal-tab[data-portal="admin"].active { border-color: var(--purple); }
+.portal-tab[data-portal="seller"].active { border-color: var(--teal); }
+.portal-tab[data-portal="buyer"].active { border-color: var(--blue); }
+
+.portal-screen { display: none; }
+.portal-screen.active { display: block; }
+
+/* ── SHARED CARD ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.badge-purple { background: var(--purple-l); color: var(--purple-d); }
+.badge-teal   { background: var(--teal-l);   color: var(--teal-d);   }
+.badge-blue   { background: var(--blue-l);   color: var(--blue);     }
+.badge-coral  { background: var(--coral-l);  color: var(--coral);    }
+.badge-amber  { background: var(--amber-l);  color: var(--amber);    }
+.badge-green  { background: var(--green-l);  color: var(--green);    }
+
+/* ── BUTTON ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--gray-d); color: white; }
+.btn-primary:hover { background: #1a1a18; }
+.btn-purple { background: var(--purple); color: white; }
+.btn-purple:hover { background: var(--purple-d); }
+.btn-teal   { background: var(--teal);   color: white; }
+.btn-teal:hover   { background: var(--teal-d);  }
+.btn-blue   { background: var(--blue);   color: white; }
+.btn-blue:hover   { background: #0c447c;  }
+.btn-outline { background: white; color: var(--gray-d); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--gray-l); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-ghost { background: transparent; color: var(--gray); border: 1px solid transparent; }
+.btn-ghost:hover { background: var(--gray-l); }
+
+/* ── INPUT ── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--gray-d);
+  background: white;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.input:focus { border-color: var(--purple); }
+.input-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 5px; display: block; letter-spacing: 0.02em; }
+
+/* ── STAT CARD ── */
+.stat {
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: white;
+}
+.stat-label { font-size: 11px; font-weight: 600; color: var(--gray); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+.stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--gray-d); line-height: 1; }
+.stat-change { font-size: 12px; margin-top: 6px; }
+.stat-up   { color: var(--green); }
+.stat-down { color: var(--coral); }
+
+/* ── TABLE ── */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  background: var(--gray-l);
+}
+.table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(211,209,199,0.4);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg); }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  min-height: calc(100vh - 49px);
+  background: white;
+  border-right: 1px solid var(--border);
+  padding: 24px 12px;
+  position: fixed;
+  top: 49px;
+  left: 0;
+  overflow-y: auto;
+}
+.sidebar-section {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 12px;
+  margin: 20px 0 6px;
+}
+.sidebar-section:first-child { margin-top: 0; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--gray-l); color: var(--gray-d); }
+.nav-item.active { background: var(--purple-l); color: var(--purple-d); font-weight: 600; }
+.nav-item.active.teal { background: var(--teal-l); color: var(--teal-d); }
+.nav-item.active.blue  { background: var(--blue-l);  color: var(--blue);  }
+.nav-icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+
+.main-content {
+  margin-left: 220px;
+  padding: 32px;
+  min-height: calc(100vh - 49px);
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.page-title {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gray-d);
+}
+.page-subtitle { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+/* ── AVATAR ── */
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── MINI BAR CHART ── */
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+}
+.chart-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: opacity 0.2s;
+}
+.chart-bar:hover { opacity: 0.7; }
+
+/* ── PRODUCT IMAGE PLACEHOLDER ── */
+.product-img {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--gray-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ── PROGRESS BAR ── */
+.progress-track { background: var(--gray-l); border-radius: 100px; height: 6px; overflow: hidden; }
+.progress-fill  { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+
+/* ── TOGGLE ── */
+.toggle { position: relative; width: 36px; height: 20px; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle input:checked + .toggle-track { background: var(--teal); }
+.toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+/* ── NOTIFICATION DOT ── */
+.notif-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  border: 2px solid white;
+}
+
+/* ── STEPS / TIMELINE ── */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 12px; position: relative; }
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 11px; top: 24px;
+  width: 1px; bottom: 0;
+  background: var(--border);
+}
+.timeline-dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  flex-shrink: 0; z-index: 1;
+}
+.timeline-content { padding-bottom: 16px; flex: 1; padding-top: 2px; }
+.timeline-label { font-size: 12px; font-weight: 600; color: var(--gray-d); }
+.timeline-time  { font-size: 11px; color: var(--gray); margin-top: 1px; }
+
+/* ── SEARCH BAR ── */
+.search-wrap { position: relative; }
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--gray); pointer-events: none;
+}
+.search-input {
+  padding-left: 36px;
+}
+
+/* ── FLOATING ELEMENTS ── */
+.floating-dot {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(5deg); }
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeSlideIn 0.4s ease forwards; }
+
+/* ── STAR RATING ── */
+.stars { color: #F9CB42; font-size: 13px; letter-spacing: 1px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ══ BUYER STOREFRONT SPECIFIC ══ */
+.buyer-header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 49px;
+  z-index: 100;
+}
+.buyer-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 64px;
+}
+.buyer-logo {
+  font-family: var(--font-head);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gray-d);
+}
+.buyer-logo span { color: var(--teal); }
+.buyer-search {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+}
+.buyer-search .input {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border-right: none;
+}
+.search-btn {
+  padding: 0 16px;
+  background: var(--gray-d);
+  color: white;
+  border: none;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+.buyer-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.buyer-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.product-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.product-card:hover {
+  border-color: var(--gray);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.product-thumb {
+  width: 100%; aspect-ratio: 1;
+  background: var(--gray-l);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px;
+  position: relative;
+  overflow: hidden;
+}
+.product-info { padding: 12px 14px 14px; }
+.product-title {
+  font-size: 13px; font-weight: 600; color: var(--gray-d);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.4; margin-bottom: 6px;
+}
+.product-seller { font-size: 11px; color: var(--gray); margin-bottom: 6px; }
+.product-price {
+  font-family: var(--font-head);
+  font-size: 16px; font-weight: 700; color: var(--gray-d);
+}
+.product-price-old {
+  font-size: 11px; color: var(--gray);
+  text-decoration: line-through; margin-left: 4px;
+}
+
+/* Hero banner */
+.hero {
+  background: linear-gradient(135deg, var(--gray-d) 0%, #3a3a38 100%);
+  border-radius: var(--radius-xl);
+  padding: 56px 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-text h1 {
+  font-family: var(--font-head);
+  font-size: 40px; font-weight: 800;
+  color: white; line-height: 1.15;
+  margin-bottom: 12px;
+}
+.hero-text p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 380px; line-height: 1.6; }
+.hero-cta { display: flex; gap: 12px; margin-top: 24px; }
+.hero-visual {
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 88px; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.hero-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+
+/* Category chips */
+.category-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.cat-chip {
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  color: var(--gray-d);
+}
+.cat-chip:hover { border-color: var(--gray); }
+.cat-chip.active { background: var(--gray-d); color: white; border-color: var(--gray-d); }
+
+/* Cart sidebar */
+.cart-panel {
+  position: fixed; right: 0; top: 113px;
+  width: 340px; height: calc(100vh - 113px);
+  background: white;
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 200;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.06);
+}
+.cart-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cart-items { flex: 1; overflow-y: auto; padding: 16px; }
+.cart-item {
+  display: flex; gap: 12px; align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(211,209,199,0.4);
+}
+.cart-item:last-child { border-bottom: none; }
+.cart-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  background: var(--gray-l);
+}
+
+/* ══ CHECKOUT ══ */
+.checkout-layout {
+  max-width: 1100px; margin: 0 auto;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+}
+.checkout-step-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--gray-d);
+  color: white;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+
+/* ══ ANIMATIONS ══ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-l) 25%, var(--border) 50%, var(--gray-l) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Hover effects for nav items */
+.nav-item { user-select: none; }
+
+/* ══ COLOR ACCENT LINES ══ */
+.accent-line {
+  height: 3px;
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+/* responsive util */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-center  { display: flex; align-items: center; gap: 10px; }
+.mt-4 { margin-top: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mt-24 { margin-top: 24px; }
+.mt-28 { margin-top: 28px; }
+.mb-8  { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.gap-8  { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.w-full { width: 100%; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.text-muted { color: var(--gray); }
+.text-bold  { font-weight: 600; }
+.text-head  { font-family: var(--font-head); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PORTAL NAVIGATION
+═══════════════════════════════════════ -->
+<nav class="portal-nav">
+  <div class="portal-logo">Market<span>Nest</span></div>
+  <button class="portal-tab active" data-portal="buyer" onclick="showPortal('buyer')">🛍 Buyer Storefront</button>
+  <button class="portal-tab" data-portal="seller" onclick="showPortal('seller')">📦 Seller Portal</button>
+  <button class="portal-tab" data-portal="admin" onclick="showPortal('admin')">⚙️ Super Admin</button>
+</nav>
+
+
+<!-- ══════════════════════════════════════
+     BUYER STOREFRONT
+═══════════════════════════════════════ -->
+<div id="buyer" class="portal-screen active">
+
+  <!-- Header -->
+  <header class="buyer-header">
+    <div class="buyer-header-inner">
+      <div class="buyer-logo">Market<span>Nest</span></div>
+      <div class="buyer-search" style="flex:1;max-width:520px;display:flex;margin-left:24px;">
+        <input class="input search-input" style="border-radius:var(--radius-md) 0 0 var(--radius-md);border-right:none;flex:1;" placeholder="Search for products, brands, categories…">
+        <button class="search-btn">🔍</button>
+      </div>
+      <div class="buyer-nav">
+        <button class="btn btn-ghost btn-sm" style="gap:6px;">
+          <span>Account</span>
+        </button>
+        <button class="btn btn-outline btn-sm" style="gap:6px;position:relative;" onclick="toggleCart()">
+          🛒 Cart
+          <span style="position:absolute;top:-6px;right:-6px;background:var(--coral);color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="showBuyerScreen('login')">Sign in</button>
+      </div>
+    </div>
+    <!-- Category nav -->
+    <div style="border-top:1px solid var(--border);padding:0 32px;">
+      <div style="max-width:1200px;margin:0 auto;display:flex;gap:0;">
+        <div id="buyer-screen-tabs" style="display:flex;gap:0;">
+          <button class="portal-tab active" style="color:var(--gray-d);font-size:13px;padding:12px 16px;border-bottom:2px solid var(--gray-d);" onclick="showBuyerScreen('home')">Home</button>
+          <button class="portal-tab" style="font-size:13px;padding:12px 16px;" onclick="showBuyerScreen('product')">Product Detail</button>
+          <button class="portal-tab" style="font-size:13px;padding:12px 16px;" onclick="showBuyerScreen('checkout')">Checkout</button>
+          <button class="portal-tab" style="font-size:13px;padding:12px 16px;" onclick="showBuyerScreen('orders')">My Orders</button>
+          <button class="portal-tab" style="font-size:13px;padding:12px 16px;" onclick="showBuyerScreen('login')">Login / Register</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── HOME SCREEN ── -->
+  <div id="buyer-home" class="buyer-body" style="display:block;">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-dot" style="width:300px;height:300px;right:-80px;top:-80px;"></div>
+      <div class="hero-dot" style="width:150px;height:150px;right:180px;bottom:-40px;"></div>
+      <div class="hero-text">
+        <div class="badge badge-teal" style="margin-bottom:16px;">✨ New arrivals every day</div>
+        <h1>Everything you<br>need, delivered<br>to your door.</h1>
+        <p>Shop from thousands of verified sellers. Pay online or cash on delivery. No account needed to browse.</p>
+        <div class="hero-cta">
+          <button class="btn" style="background:white;color:var(--gray-d);">Shop now →</button>
+          <button class="btn" style="background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.2);">Browse categories</button>
+        </div>
+      </div>
+      <div class="hero-visual">🛍️</div>
+    </div>
+
+    <!-- Categories -->
+    <div class="category-row">
+      <div class="cat-chip active">All</div>
+      <div class="cat-chip">Electronics 📱</div>
+      <div class="cat-chip">Fashion 👗</div>
+      <div class="cat-chip">Home & Living 🏠</div>
+      <div class="cat-chip">Sports 🏋️</div>
+      <div class="cat-chip">Books 📚</div>
+      <div class="cat-chip">Beauty 💄</div>
+      <div class="cat-chip">Groceries 🥦</div>
+      <div class="cat-chip">Toys 🧸</div>
+    </div>
+
+    <!-- Section header -->
+    <div class="flex-between mb-16">
+      <div>
+        <div class="text-head" style="font-size:20px;font-weight:700;color:var(--gray-d);">Featured products</div>
+        <div class="text-muted text-sm mt-4">Hand-picked by our team</div>
+      </div>
+      <button class="btn btn-ghost btn-sm">View all →</button>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid">
+      <!-- Products -->
+      <div class="product-card">
+        <div class="product-thumb">👟
+          <div style="position:absolute;top:10px;right:10px;" class="badge badge-coral">-20%</div>
+        </div>
+        <div class="product-info">
+          <div class="product-title">Premium Running Sneakers Air Max Pro</div>
+          <div class="product-seller">by NikeSports Store</div>
+          <div class="stars">★★★★★</div>
+          <div class="flex-center mt-8">
+            <span class="product-price">$79.99</span>
+            <span class="product-price-old">$99.99</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-thumb" style="background:#E6F1FB;">💻</div>
+        <div class="product-info">
+          <div class="product-title">Wireless Mechanical Keyboard Compact 75%</div>
+          <div class="product-seller">by TechHub Official</div>
+          <div class="stars">★★★★<span style="color:var(--border);">★</span></div>
+          <div class="flex-center mt-8">
+            <span class="product-price">$129.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-thumb" style="background:#FAEEDA;">🕯️
+          <div style="position:absolute;top:10px;left:10px;" class="badge badge-green">New</div>
+        </div>
+        <div class="product-info">
+          <div class="product-title">Luxury Soy Candle Gift Set — 3 Pack</div>
+          <div class="product-seller">by AromaCraft Co.</div>
+          <div class="stars">★★★★★</div>
+          <div class="flex-center mt-8">
+            <span class="product-price">$34.99</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-thumb" style="background:#E1F5EE;">🎧</div>
+        <div class="product-info">
+          <div class="product-title">Noise Cancelling Headphones Over-Ear BT</div>
+          <div class="product-seller">by SoundWave Store</div>
+          <div class="stars">★★★★<span style="color:var(--border);">★</span></div>
+          <div class="flex-center mt-8">
+            <span class="product-price">$189.00</span>
+            <span class="product-price-old">$249.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trending Section -->
+    <div style="margin-top:40px;">
+      <div class="flex-between mb-16">
+        <div class="text-head" style="font-size:20px;font-weight:700;color:var(--gray-d);">Trending now 🔥</div>
+        <button class="btn btn-ghost btn-sm">View all →</button>
+      </div>
+      <div class="product-grid">
+        <div class="product-card">
+          <div class="product-thumb" style="background:var(--purple-l);">👜</div>
+          <div class="product-info">
+            <div class="product-title">Minimalist Leather Tote Bag</div>
+            <div class="product-seller">by StyleLab</div>
+            <div class="stars">★★★★★</div>
+            <div class="flex-center mt-8"><span class="product-price">$54.99</span></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-thumb" style="background:var(--coral-l);">🌱</div>
+          <div class="product-info">
+            <div class="product-title">Indoor Plant Starter Kit (5 plants)</div>
+            <div class="product-seller">by GreenThumb</div>
+            <div class="stars">★★★★<span style="color:var(--border);">★</span></div>
+            <div class="flex-center mt-8"><span class="product-price">$29.99</span></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-thumb" style="background:var(--amber-l);">☕</div>
+          <div class="product-info">
+            <div class="product-title">Pour-Over Coffee Set Premium Glass</div>
+            <div class="product-seller">by BrewMaster</div>
+            <div class="stars">★★★★★</div>
+            <div class="flex-center mt-8"><span class="product-price">$44.00</span></div>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-thumb" style="background:var(--blue-l);">🎮</div>
+          <div class="product-info">
+            <div class="product-title">Retro Mini Gaming Controller USB-C</div>
+            <div class="product-seller">by RetroGear</div>
+            <div class="stars">★★★★<span style="color:var(--border);">★</span></div>
+            <div class="flex-center mt-8"><span class="product-price">$22.99</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust badges -->
+    <div style="margin-top:48px;padding:24px;background:white;border-radius:var(--radius-xl);border:1px solid var(--border);display:flex;gap:0;justify-content:space-around;text-align:center;">
+      <div><div style="font-size:28px;margin-bottom:8px;">🔒</div><div style="font-size:13px;font-weight:600;">Secure Payments</div><div class="text-muted text-xs mt-4">SSL encrypted checkout</div></div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div><div style="font-size:28px;margin-bottom:8px;">🚚</div><div style="font-size:13px;font-weight:600;">Fast Delivery</div><div class="text-muted text-xs mt-4">COD & online available</div></div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div><div style="font-size:28px;margin-bottom:8px;">↩️</div><div style="font-size:13px;font-weight:600;">Easy Returns</div><div class="text-muted text-xs mt-4">30-day return policy</div></div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div><div style="font-size:28px;margin-bottom:8px;">💬</div><div style="font-size:13px;font-weight:600;">24/7 Support</div><div class="text-muted text-xs mt-4">AI + human support</div></div>
+    </div>
+
+  </div>
+
+  <!-- ── PRODUCT DETAIL SCREEN ── -->
+  <div id="buyer-product" class="buyer-body" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;max-width:1000px;">
+      <!-- Gallery -->
+      <div>
+        <div style="background:var(--gray-l);border-radius:var(--radius-xl);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:120px;margin-bottom:12px;">🎧</div>
+        <div style="display:flex;gap:8px;">
+          <div style="width:64px;height:64px;border-radius:var(--radius-md);background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(--gray-d);">🎧</div>
+          <div style="width:64px;height:64px;border-radius:var(--radius-md);background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--border);">🔵</div>
+          <div style="width:64px;height:64px;border-radius:var(--radius-md);background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--border);">⚫</div>
+        </div>
+      </div>
+      <!-- Info -->
+      <div>
+        <div class="badge badge-green mb-8">In Stock</div>
+        <h1 style="font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--gray-d);line-height:1.3;margin-bottom:8px;">Sony WH-1000XM5 Noise Cancelling Headphones</h1>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div class="stars">★★★★★</div>
+          <span class="text-muted text-sm">4.8 (2,341 reviews)</span>
+          <span class="text-muted text-sm">· by SoundWave Store</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:20px;">
+          <span style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--gray-d);">$189.00</span>
+          <span style="font-size:16px;color:var(--gray);text-decoration:line-through;">$249.00</span>
+          <span class="badge badge-coral">-24%</span>
+        </div>
+        <!-- Variants -->
+        <div style="margin-bottom:20px;">
+          <div class="input-label">Colour</div>
+          <div style="display:flex;gap:8px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1a1a18;border:3px solid var(--gray-d);cursor:pointer;"></div>
+            <div style="width:36px;height:36px;border-radius:50%;background:#c8bfb0;border:1px solid var(--border);cursor:pointer;"></div>
+            <div style="width:36px;height:36px;border-radius:50%;background:#4a90d9;border:1px solid var(--border);cursor:pointer;"></div>
+          </div>
+        </div>
+        <!-- Add to cart -->
+        <div style="display:flex;gap:12px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
+            <button style="padding:10px 14px;border:none;background:none;cursor:pointer;font-size:16px;">−</button>
+            <span style="padding:10px 16px;font-weight:600;border-left:1px solid var(--border);border-right:1px solid var(--border);">1</span>
+            <button style="padding:10px 14px;border:none;background:none;cursor:pointer;font-size:16px;">+</button>
+          </div>
+          <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="toggleCart()">Add to cart 🛒</button>
+        </div>
+        <button class="btn btn-outline w-full" style="justify-content:center;">Buy now — Pay later available</button>
+        <!-- Delivery info -->
+        <div style="margin-top:20px;padding:16px;background:var(--gray-l);border-radius:var(--radius-md);">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Delivery options</div>
+          <div style="display:flex;gap:16px;">
+            <div style="text-align:center;flex:1;padding:12px;background:white;border-radius:var(--radius-sm);border:1px solid var(--border);">
+              <div style="font-size:20px;margin-bottom:4px;">🚚</div>
+              <div style="font-size:12px;font-weight:600;">Standard</div>
+              <div style="font-size:11px;color:var(--gray);">3-5 days · Free</div>
+            </div>
+            <div style="text-align:center;flex:1;padding:12px;background:white;border-radius:var(--radius-sm);border:1px solid var(--border);">
+              <div style="font-size:20px;margin-bottom:4px;">⚡</div>
+              <div style="font-size:12px;font-weight:600;">Express</div>
+              <div style="font-size:11px;color:var(--gray);">1-2 days · $9.99</div>
+            </div>
+            <div style="text-align:center;flex:1;padding:12px;background:white;border-radius:var(--radius-sm);border:1px solid var(--border);">
+              <div style="font-size:20px;margin-bottom:4px;">💵</div>
+              <div style="font-size:12px;font-weight:600;">Cash on Del.</div>
+              <div style="font-size:11px;color:var(--gray);">Available</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Reviews section -->
+    <div style="margin-top:48px;max-width:1000px;">
+      <div style="font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:20px;">Customer reviews</div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:32px;">
+        <div style="text-align:center;padding:24px;background:white;border:1px solid var(--border);border-radius:var(--radius-lg);">
+          <div style="font-family:var(--font-head);font-size:48px;font-weight:800;color:var(--gray-d);">4.8</div>
+          <div class="stars" style="font-size:20px;margin:4px 0;">★★★★★</div>
+          <div class="text-muted text-sm">2,341 reviews</div>
+        </div>
+        <div>
+          <div class="card" style="padding:20px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+              <div class="avatar" style="background:var(--blue-l);color:var(--blue);">AK</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:13px;">Ahmad K.</div>
+                <div class="stars" style="font-size:12px;">★★★★★</div>
+                <div style="font-size:13px;margin-top:6px;line-height:1.5;color:var(--gray-d);">Absolutely incredible noise cancelling. I was skeptical but these are genuinely life-changing for focus work. Worth every penny.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="avatar" style="background:var(--teal-l);color:var(--teal);">SR</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:13px;">Sara R.</div>
+                <div class="stars" style="font-size:12px;">★★★★<span style="color:var(--border);">★</span></div>
+                <div style="font-size:13px;margin-top:6px;line-height:1.5;color:var(--gray-d);">Great sound quality and the battery lasts forever. Only minor gripe is they're a bit tight on the ears initially.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHECKOUT SCREEN ── -->
+  <div id="buyer-checkout" style="display:none;background:var(--bg);">
+    <div class="checkout-layout">
+      <div>
+        <!-- Step 1: Account -->
+        <div class="card" style="padding:24px;margin-bottom:16px;">
+          <div class="checkout-step-header">
+            <div class="step-num">1</div>
+            <div class="step-title">Your account</div>
+            <div class="badge badge-green" style="margin-left:auto;">✓ Signed in</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-l);border-radius:var(--radius-md);">
+            <div class="avatar" style="background:var(--blue-l);color:var(--blue);width:40px;height:40px;font-size:14px;">JD</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;">John Doe</div>
+              <div style="font-size:12px;color:var(--gray);">john.doe@gmail.com</div>
+            </div>
+          </div>
+        </div>
+        <!-- Step 2: Address -->
+        <div class="card" style="padding:24px;margin-bottom:16px;">
+          <div class="checkout-step-header">
+            <div class="step-num">2</div>
+            <div class="step-title">Shipping address</div>
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div><label class="input-label">Full name</label><input class="input" value="John Doe"></div>
+            <div><label class="input-label">Phone number</label><input class="input" value="+92 300 1234567"></div>
+            <div style="grid-column:1/-1;"><label class="input-label">Address line 1</label><input class="input" value="House 14, Street 5, F-7/1"></div>
+            <div><label class="input-label">City</label><input class="input" value="Islamabad"></div>
+            <div><label class="input-label">Postal code</label><input class="input" value="44000"></div>
+          </div>
+        </div>
+        <!-- Step 3: Payment -->
+        <div class="card" style="padding:24px;">
+          <div class="checkout-step-header">
+            <div class="step-num">3</div>
+            <div class="step-title">Payment method</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:20px;">
+            <div style="flex:1;padding:16px;border:2px solid var(--gray-d);border-radius:var(--radius-md);cursor:pointer;background:var(--gray-l);">
+              <div style="font-size:20px;margin-bottom:6px;">💳</div>
+              <div style="font-size:13px;font-weight:600;">Online payment</div>
+              <div style="font-size:11px;color:var(--gray);">Credit / Debit card</div>
+            </div>
+            <div style="flex:1;padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;">
+              <div style="font-size:20px;margin-bottom:6px;">💵</div>
+              <div style="font-size:13px;font-weight:600;">Cash on delivery</div>
+              <div style="font-size:11px;color:var(--gray);">Pay when received</div>
+            </div>
+          </div>
+          <!-- Card fields (Stripe Elements placeholder) -->
+          <div style="padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--gray-l);">
+            <div class="input-label">Card details (powered by Stripe)</div>
+            <div style="display:grid;grid-template-columns:1fr 100px 80px;gap:8px;margin-top:8px;">
+              <input class="input" placeholder="Card number" style="font-family:var(--font-mono);">
+              <input class="input" placeholder="MM / YY">
+              <input class="input" placeholder="CVC">
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Order summary -->
+      <div>
+        <div class="card" style="padding:24px;position:sticky;top:200px;">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:16px;">Order summary</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+            <div style="display:flex;gap:12px;align-items:center;">
+              <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎧</div>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:600;line-height:1.3;">Sony WH-1000XM5</div>
+                <div style="font-size:11px;color:var(--gray);">Qty: 1 · Black</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;">$189.00</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👟</div>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:600;line-height:1.3;">Air Max Pro Running</div>
+                <div style="font-size:11px;color:var(--gray);">Qty: 1 · Size 42</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;">$79.99</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:16px;display:flex;flex-direction:column;gap:8px;">
+            <div class="flex-between text-sm"><span class="text-muted">Subtotal</span><span class="text-bold">$268.99</span></div>
+            <div class="flex-between text-sm"><span class="text-muted">Shipping</span><span style="color:var(--green);font-weight:600;">Free</span></div>
+            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;" class="flex-between"><span style="font-family:var(--font-head);font-size:16px;font-weight:700;">Total</span><span style="font-family:var(--font-head);font-size:18px;font-weight:800;">$268.99</span></div>
+          </div>
+          <button class="btn btn-primary w-full mt-16" style="justify-content:center;padding:14px;">Place order — $268.99</button>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:11px;color:var(--gray);">🔒 Secured by Stripe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ORDERS SCREEN ── -->
+  <div id="buyer-orders" class="buyer-body" style="display:none;">
+    <div style="font-family:var(--font-head);font-size:22px;font-weight:700;margin-bottom:24px;">My orders</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <!-- Order card 1 -->
+      <div class="card" style="padding:20px;">
+        <div class="flex-between mb-12">
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">Order #MN-20240602-8821</div>
+          <div class="badge badge-blue">Shipped</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
+          <div style="display:flex;gap:6px;">
+            <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;">🎧</div>
+            <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;">👟</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">Sony WH-1000XM5 + 1 more item</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:2px;">Placed 2 Jun 2026 · $268.99</div>
+          </div>
+          <button class="btn btn-outline btn-sm">Track order</button>
+        </div>
+        <!-- Timeline -->
+        <div style="padding:16px;background:var(--gray-l);border-radius:var(--radius-md);">
+          <div style="display:flex;align-items:center;justify-content:space-between;position:relative;">
+            <div style="position:absolute;top:14px;left:28px;right:28px;height:2px;background:var(--border);z-index:0;"></div>
+            <div style="position:absolute;top:14px;left:28px;width:50%;height:2px;background:var(--blue);z-index:0;"></div>
+            <div style="text-align:center;position:relative;z-index:1;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;margin:0 auto;">✓</div>
+              <div style="font-size:10px;font-weight:600;margin-top:6px;color:var(--blue);">Confirmed</div>
+            </div>
+            <div style="text-align:center;position:relative;z-index:1;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;margin:0 auto;">✓</div>
+              <div style="font-size:10px;font-weight:600;margin-top:6px;color:var(--blue);">Processing</div>
+            </div>
+            <div style="text-align:center;position:relative;z-index:1;">
+              <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;margin:0 auto;">📦</div>
+              <div style="font-size:10px;font-weight:600;margin-top:6px;color:var(--blue);">Shipped</div>
+            </div>
+            <div style="text-align:center;position:relative;z-index:1;">
+              <div style="width:28px;height:28px;border-radius:50%;background:white;border:2px solid var(--border);margin:0 auto;"></div>
+              <div style="font-size:10px;color:var(--gray);margin-top:6px;">Delivered</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--blue);font-weight:500;">📦 Tracking: TCS-12344321 · Estimated delivery: Jun 5</div>
+        </div>
+      </div>
+      <!-- Order card 2 (delivered) -->
+      <div class="card" style="padding:20px;">
+        <div class="flex-between mb-12">
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">Order #MN-20240520-7441</div>
+          <div class="badge badge-green">Delivered</div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div style="width:52px;height:52px;background:var(--amber-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:22px;">☕</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">Pour-Over Coffee Set</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:2px;">Delivered 22 May 2026 · $44.00</div>
+          </div>
+          <button class="btn btn-outline btn-sm">Leave review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LOGIN SCREEN ── -->
+  <div id="buyer-login" class="buyer-body" style="display:none;max-width:420px;margin:0 auto;">
+    <div class="card" style="padding:36px;">
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="font-family:var(--font-head);font-size:24px;font-weight:800;color:var(--gray-d);">Welcome back</div>
+        <div style="font-size:14px;color:var(--gray);margin-top:6px;">Sign in to complete your order or access your account</div>
+      </div>
+      <!-- Google button -->
+      <button class="btn w-full" style="justify-content:center;background:white;border:1px solid var(--border);font-size:14px;padding:13px;margin-bottom:16px;">
+        <span style="font-size:18px;">G</span> Continue with Google
+      </button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-size:12px;color:var(--gray);">or</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+      <div style="margin-bottom:12px;"><label class="input-label">Email</label><input class="input" type="email" placeholder="you@example.com"></div>
+      <div style="margin-bottom:20px;"><label class="input-label">Password</label><input class="input" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-primary w-full" style="justify-content:center;padding:13px;">Sign in</button>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--gray);">No account? <a href="#" style="color:var(--blue);font-weight:600;">Create one free</a></div>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--gray);">
+        <a href="#" style="color:var(--gray);">Or continue as guest →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CART PANEL ── -->
+  <div id="cart-panel" class="cart-panel" style="display:none;">
+    <div class="cart-header">
+      <div style="font-family:var(--font-head);font-size:16px;font-weight:700;">Cart (3)</div>
+      <button class="btn btn-ghost btn-sm" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items">
+      <div class="cart-item">
+        <div class="product-img">🎧</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">Sony WH-1000XM5</div>
+          <div style="font-size:11px;color:var(--gray);">Black</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;">$189.00</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-sm);">
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">−</button>
+            <span style="padding:4px 8px;font-size:12px;font-weight:600;border-left:1px solid var(--border);border-right:1px solid var(--border);">1</span>
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">+</button>
+          </div>
+          <button style="font-size:11px;color:var(--coral);border:none;background:none;cursor:pointer;">Remove</button>
+        </div>
+      </div>
+      <div class="cart-item">
+        <div class="product-img">👟</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">Air Max Pro Running</div>
+          <div style="font-size:11px;color:var(--gray);">Size 42</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;">$79.99</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-sm);">
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">−</button>
+            <span style="padding:4px 8px;font-size:12px;font-weight:600;border-left:1px solid var(--border);border-right:1px solid var(--border);">1</span>
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">+</button>
+          </div>
+          <button style="font-size:11px;color:var(--coral);border:none;background:none;cursor:pointer;">Remove</button>
+        </div>
+      </div>
+      <div class="cart-item">
+        <div class="product-img">☕</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">Pour-Over Coffee Set</div>
+          <div style="font-size:11px;color:var(--gray);">Default</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;">$44.00</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:var(--radius-sm);">
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">−</button>
+            <span style="padding:4px 8px;font-size:12px;font-weight:600;border-left:1px solid var(--border);border-right:1px solid var(--border);">1</span>
+            <button style="padding:4px 8px;border:none;background:none;cursor:pointer;">+</button>
+          </div>
+          <button style="font-size:11px;color:var(--coral);border:none;background:none;cursor:pointer;">Remove</button>
+        </div>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="flex-between mb-8 text-sm"><span class="text-muted">Subtotal</span><span class="text-bold">$312.99</span></div>
+      <div class="flex-between mb-12 text-sm"><span class="text-muted">Shipping</span><span style="color:var(--green);font-weight:600;">Free</span></div>
+      <button class="btn btn-primary w-full" style="justify-content:center;" onclick="showBuyerScreen('checkout');toggleCart();">Checkout — $312.99</button>
+    </div>
+  </div>
+
+</div><!-- /buyer -->
+
+
+<!-- ══════════════════════════════════════
+     SELLER PORTAL
+═══════════════════════════════════════ -->
+<div id="seller" class="portal-screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:0 12px;">
+      <div class="avatar" style="background:var(--teal-l);color:var(--teal-d);width:36px;height:36px;font-size:13px;">TC</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--gray-d);">TechHub Store</div>
+        <div style="font-size:11px;color:var(--gray);">Seller account</div>
+      </div>
+    </div>
+    <div class="sidebar-section">Overview</div>
+    <div class="nav-item active teal" onclick="showSellerScreen('dashboard')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showSellerScreen('analytics')">📈 Analytics</div>
+    <div class="sidebar-section">Catalogue</div>
+    <div class="nav-item" onclick="showSellerScreen('products')">📦 Products</div>
+    <div class="nav-item" onclick="showSellerScreen('addproduct')">➕ Add product</div>
+    <div class="nav-item" onclick="showSellerScreen('inventory')">🏷 Inventory</div>
+    <div class="sidebar-section">Sales</div>
+    <div class="nav-item" onclick="showSellerScreen('orders')">🛍 Orders</div>
+    <div class="nav-item" onclick="showSellerScreen('earnings')">💰 Earnings</div>
+    <div class="sidebar-section">Account</div>
+    <div class="nav-item">⚙️ Settings</div>
+    <div class="nav-item">🚪 Sign out</div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="seller-dashboard" style="display:block;">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle">Welcome back, TechHub Store 👋</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-outline btn-sm">This month ▾</button>
+          <button class="btn btn-teal btn-sm" onclick="showSellerScreen('addproduct')">+ Add product</button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid-4 mb-24">
+        <div class="stat">
+          <div class="stat-label">Revenue (month)</div>
+          <div class="stat-value">$12,840</div>
+          <div class="stat-change stat-up">↑ 18.4% vs last month</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Orders</div>
+          <div class="stat-value">284</div>
+          <div class="stat-change stat-up">↑ 31 new today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Products live</div>
+          <div class="stat-value">48</div>
+          <div class="stat-change" style="color:var(--amber);">⚠ 3 low stock</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Avg. rating</div>
+          <div class="stat-value">4.8 ★</div>
+          <div class="stat-change stat-up">↑ from 4.6</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="align-items:start;">
+        <!-- Recent orders -->
+        <div>
+          <div class="flex-between mb-16">
+            <div style="font-size:15px;font-weight:700;">Recent orders</div>
+            <button class="btn btn-ghost btn-sm" onclick="showSellerScreen('orders')">View all →</button>
+          </div>
+          <div class="card" style="overflow:hidden;">
+            <table class="table">
+              <thead><tr><th>Order</th><th>Product</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><span style="font-family:var(--font-mono);font-size:12px;">#8821</span></td><td><div style="font-size:12px;font-weight:500;">Sony WH-1000XM5</div></td><td style="font-weight:600;">$189</td><td><span class="badge badge-amber">Processing</span></td></tr>
+                <tr><td><span style="font-family:var(--font-mono);font-size:12px;">#8820</span></td><td><div style="font-size:12px;font-weight:500;">Mechanical KB</div></td><td style="font-weight:600;">$129</td><td><span class="badge badge-blue">Shipped</span></td></tr>
+                <tr><td><span style="font-family:var(--font-mono);font-size:12px;">#8819</span></td><td><div style="font-size:12px;font-weight:500;">USB-C Hub</div></td><td style="font-weight:600;">$64</td><td><span class="badge badge-green">Delivered</span></td></tr>
+                <tr><td><span style="font-family:var(--font-mono);font-size:12px;">#8818</span></td><td><div style="font-size:12px;font-weight:500;">Laptop Stand</div></td><td style="font-weight:600;">$45</td><td><span class="badge badge-green">Delivered</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Revenue mini chart + low stock -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:16px;">Revenue — past 14 days</div>
+            <div style="display:flex;align-items:flex-end;gap:3px;height:64px;">
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:35%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:50%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:40%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:65%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:55%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:70%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:45%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:80%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:60%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:90%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:75%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal-l);height:85%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--teal);height:100%"></div>
+              <div style="flex:1;border-radius:3px 3px 0 0;background:var(--border);height:60%"></div>
+            </div>
+          </div>
+          <!-- Low stock alerts -->
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:12px;">⚠ Low stock alerts</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">USB-C Hub Pro</span><span style="font-size:11px;color:var(--coral);font-weight:600;">3 left</span></div><div class="progress-track"><div class="progress-fill" style="width:6%;background:var(--coral);"></div></div></div>
+              <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Laptop Stand Aluminium</span><span style="font-size:11px;color:var(--amber);font-weight:600;">8 left</span></div><div class="progress-track"><div class="progress-fill" style="width:16%;background:var(--amber);"></div></div></div>
+              <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Webcam 4K</span><span style="font-size:11px;color:var(--amber);font-weight:600;">12 left</span></div><div class="progress-track"><div class="progress-fill" style="width:24%;background:var(--amber);"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD PRODUCT -->
+    <div id="seller-addproduct" style="display:none;">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Add product</div>
+          <div class="page-subtitle">Create a new listing for your store</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline btn-sm">Save as draft</button>
+          <button class="btn btn-teal">Publish product</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Basic info -->
+          <div class="card" style="padding:24px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Basic information</div>
+            <div style="margin-bottom:12px;"><label class="input-label">Product title *</label><input class="input" value="Sony WH-1000XM5 Wireless Noise Cancelling Headphones"></div>
+            <div style="margin-bottom:12px;"><label class="input-label">Description</label>
+              <div style="border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;min-height:100px;font-size:13px;background:white;color:var(--gray-d);line-height:1.6;">Industry-leading noise cancelling with Auto NC Optimizer. 30-hour battery life with quick charge support…</div>
+            </div>
+            <div class="grid-2" style="gap:12px;">
+              <div><label class="input-label">Category *</label>
+                <select class="input" style="cursor:pointer;"><option>Electronics → Headphones</option></select>
+              </div>
+              <div><label class="input-label">SKU</label><input class="input" value="SONY-WH1000XM5-BLK"></div>
+            </div>
+          </div>
+          <!-- Images -->
+          <div class="card" style="padding:24px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Product images</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <div style="width:100px;height:100px;border-radius:var(--radius-md);background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:36px;border:1px solid var(--border);">🎧</div>
+              <div style="width:100px;height:100px;border-radius:var(--radius-md);background:var(--gray-l);display:flex;align-items:center;justify-content:center;font-size:36px;border:1px solid var(--border);">🎧</div>
+              <div style="width:100px;height:100px;border-radius:var(--radius-md);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--gray);">
+                <span style="font-size:24px;">+</span>
+                <span style="font-size:10px;">Add image</span>
+              </div>
+            </div>
+            <div class="text-xs text-muted mt-8">Up to 10 images · Max 5MB each · JPG, PNG, WebP</div>
+          </div>
+          <!-- Variants -->
+          <div class="card" style="padding:24px;">
+            <div class="flex-between mb-16">
+              <div style="font-size:14px;font-weight:700;">Variants</div>
+              <button class="btn btn-outline btn-sm">+ Add option</button>
+            </div>
+            <table class="table" style="margin-bottom:12px;">
+              <thead><tr><th>Colour</th><th>Price</th><th>Stock</th><th>SKU</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border-radius:50%;background:#1a1a18;display:inline-block;"></span>Black</span></td><td><input class="input" value="$189.00" style="width:90px;padding:6px 10px;font-size:12px;"></td><td><input class="input" value="42" style="width:60px;padding:6px 10px;font-size:12px;"></td><td><span style="font-size:11px;color:var(--gray);font-family:var(--font-mono);">...-BLK</span></td><td><button style="border:none;background:none;color:var(--gray);cursor:pointer;font-size:12px;">✕</button></td></tr>
+                <tr><td><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border-radius:50%;background:#c8bfb0;display:inline-block;"></span>Silver</span></td><td><input class="input" value="$189.00" style="width:90px;padding:6px 10px;font-size:12px;"></td><td><input class="input" value="18" style="width:60px;padding:6px 10px;font-size:12px;"></td><td><span style="font-size:11px;color:var(--gray);font-family:var(--font-mono);">...-SLV</span></td><td><button style="border:none;background:none;color:var(--gray);cursor:pointer;font-size:12px;">✕</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Right: pricing & status -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Pricing</div>
+            <div style="margin-bottom:12px;"><label class="input-label">Price *</label><input class="input" value="189.00" type="number"></div>
+            <div style="margin-bottom:12px;"><label class="input-label">Compare price</label><input class="input" value="249.00" type="number"></div>
+            <div class="text-xs text-muted">Set a compare price to show a discount badge</div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Status</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                <span style="font-size:13px;font-weight:500;">Published</span>
+                <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </label>
+              <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                <span style="font-size:13px;font-weight:500;">Featured</span>
+                <label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </label>
+            </div>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Commission preview</div>
+            <div class="flex-between text-sm mb-4"><span class="text-muted">Your price</span><span class="text-bold">$189.00</span></div>
+            <div class="flex-between text-sm mb-4"><span class="text-muted">Platform (10%)</span><span style="color:var(--coral);font-weight:600;">−$18.90</span></div>
+            <div style="border-top:1px solid var(--border);padding-top:8px;" class="flex-between text-sm"><span class="text-bold">Your earnings</span><span style="color:var(--green);font-weight:700;">$170.10</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="seller-orders" style="display:none;">
+      <div class="topbar">
+        <div class="page-title">Orders</div>
+        <div style="display:flex;gap:8px;">
+          <input class="input" placeholder="Search orders…" style="width:220px;">
+          <select class="input" style="width:140px;cursor:pointer;"><option>All statuses</option></select>
+        </div>
+      </div>
+      <!-- Status tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm">All (284)</button>
+        <button class="btn btn-outline btn-sm">New (8)</button>
+        <button class="btn btn-outline btn-sm">Processing (31)</button>
+        <button class="btn btn-outline btn-sm">Shipped (47)</button>
+        <button class="btn btn-outline btn-sm">Delivered (192)</button>
+        <button class="btn btn-outline btn-sm">Cancelled (6)</button>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Order ID</th><th>Buyer</th><th>Products</th><th>Total</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#8821</span><div style="font-size:10px;color:var(--gray);">Jun 2, 2026</div></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--blue-l);color:var(--blue);">JD</div><div style="font-size:12px;font-weight:500;">John D.</div></div></td>
+              <td><div style="font-size:12px;">Sony WH-1000XM5</div><div style="font-size:11px;color:var(--gray);">Qty: 1</div></td>
+              <td style="font-weight:700;">$189.00</td>
+              <td><span class="badge badge-blue">Online</span></td>
+              <td><span class="badge badge-amber">Processing</span></td>
+              <td><button class="btn btn-outline btn-sm">Mark shipped</button></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#8820</span><div style="font-size:10px;color:var(--gray);">Jun 2, 2026</div></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--teal-l);color:var(--teal);">SR</div><div style="font-size:12px;font-weight:500;">Sara R.</div></div></td>
+              <td><div style="font-size:12px;">Mechanical Keyboard</div></td>
+              <td style="font-weight:700;">$129.00</td>
+              <td><span class="badge badge-amber">COD</span></td>
+              <td><span class="badge badge-blue">Shipped</span></td>
+              <td><button class="btn btn-outline btn-sm">View details</button></td>
+            </tr>
+            <tr>
+              <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#8819</span><div style="font-size:10px;color:var(--gray);">Jun 1, 2026</div></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--purple-l);color:var(--purple);">AK</div><div style="font-size:12px;font-weight:500;">Ahmad K.</div></div></td>
+              <td><div style="font-size:12px;">USB-C Hub Pro</div></td>
+              <td style="font-weight:700;">$64.00</td>
+              <td><span class="badge badge-blue">Online</span></td>
+              <td><span class="badge badge-green">Delivered</span></td>
+              <td><button class="btn btn-ghost btn-sm">View</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EARNINGS -->
+    <div id="seller-earnings" style="display:none;">
+      <div class="topbar">
+        <div class="page-title">Earnings & Payouts</div>
+        <button class="btn btn-outline btn-sm">Download CSV</button>
+      </div>
+      <div class="grid-3 mb-24">
+        <div class="stat"><div class="stat-label">This month (gross)</div><div class="stat-value">$14,267</div><div class="stat-change stat-up">↑ 18.4%</div></div>
+        <div class="stat"><div class="stat-label">Platform commission (10%)</div><div class="stat-value" style="color:var(--coral);">−$1,427</div></div>
+        <div class="stat"><div class="stat-label">Net earnings</div><div class="stat-value" style="color:var(--green);">$12,840</div><div class="stat-change stat-up">Next payout: Jun 7</div></div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;">Payout history</div>
+        <table class="table">
+          <thead><tr><th>Period</th><th>Gross</th><th>Commission</th><th>Net payout</th><th>Status</th><th>Paid date</th></tr></thead>
+          <tbody>
+            <tr><td>May 24 – May 31</td><td>$9,440</td><td>$944</td><td style="font-weight:700;color:var(--green);">$8,496</td><td><span class="badge badge-green">Paid</span></td><td style="font-size:12px;color:var(--gray);">Jun 1, 2026</td></tr>
+            <tr><td>May 17 – May 23</td><td>$7,820</td><td>$782</td><td style="font-weight:700;color:var(--green);">$7,038</td><td><span class="badge badge-green">Paid</span></td><td style="font-size:12px;color:var(--gray);">May 25, 2026</td></tr>
+            <tr><td>May 10 – May 16</td><td>$6,240</td><td>$624</td><td style="font-weight:700;color:var(--green);">$5,616</td><td><span class="badge badge-green">Paid</span></td><td style="font-size:12px;color:var(--gray);">May 18, 2026</td></tr>
+            <tr><td>Jun 1 – Jun 7</td><td>$14,267</td><td>$1,427</td><td style="font-weight:700;color:var(--amber);">$12,840</td><td><span class="badge badge-amber">Pending</span></td><td style="font-size:12px;color:var(--gray);">Est. Jun 7</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="seller-analytics" style="display:none;">
+      <div class="topbar"><div class="page-title">Analytics</div><button class="btn btn-outline btn-sm">Last 30 days ▾</button></div>
+      <div class="grid-2 mb-20" style="align-items:start;">
+        <div class="card" style="padding:20px;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Daily revenue</div>
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--teal);margin-bottom:16px;">$12,840</div>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:80px;">
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:40%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:55%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:45%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:70%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:60%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:80%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:50%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:90%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:65%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal-l);height:100%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--teal);height:85%"></div>
+            <div style="flex:1;border-radius:2px 2px 0 0;background:var(--border);height:30%"></div>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Top products</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Sony WH-1000XM5</span><span style="font-size:12px;font-weight:700;color:var(--teal);">$5,670</span></div><div class="progress-track"><div class="progress-fill" style="width:100%;background:var(--teal);"></div></div></div>
+            <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Mechanical Keyboard</span><span style="font-size:12px;font-weight:700;color:var(--teal);">$3,870</span></div><div class="progress-track"><div class="progress-fill" style="width:68%;background:var(--teal-l);"></div></div></div>
+            <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">USB-C Hub Pro</span><span style="font-size:12px;font-weight:700;color:var(--teal);">$2,048</span></div><div class="progress-track"><div class="progress-fill" style="width:36%;background:var(--teal-l);"></div></div></div>
+            <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Laptop Stand</span><span style="font-size:12px;font-weight:700;color:var(--teal);">$1,252</span></div><div class="progress-track"><div class="progress-fill" style="width:22%;background:var(--teal-l);"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="seller-products" style="display:none;">
+      <div class="topbar">
+        <div class="page-title">Products</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="input" placeholder="Search products…" style="width:220px;">
+          <button class="btn btn-teal btn-sm" onclick="showSellerScreen('addproduct')">+ Add product</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Sales</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><div class="product-img">🎧</div><div style="font-size:13px;font-weight:600;">Sony WH-1000XM5</div></div></td>
+              <td><span class="text-sm text-muted">Headphones</span></td>
+              <td style="font-weight:600;">$189.00</td>
+              <td><span style="color:var(--green);font-weight:600;">42</span></td>
+              <td><span class="badge badge-green">Live</span></td>
+              <td style="font-size:13px;">301 sold</td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">⋯</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><div class="product-img">⌨️</div><div style="font-size:13px;font-weight:600;">Mechanical Keyboard 75%</div></div></td>
+              <td><span class="text-sm text-muted">Keyboards</span></td>
+              <td style="font-weight:600;">$129.00</td>
+              <td><span style="color:var(--coral);font-weight:600;">3</span></td>
+              <td><span class="badge badge-green">Live</span></td>
+              <td style="font-size:13px;">87 sold</td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">⋯</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><div class="product-img">🔌</div><div style="font-size:13px;font-weight:600;">USB-C Hub Pro 7-in-1</div></div></td>
+              <td><span class="text-sm text-muted">Accessories</span></td>
+              <td style="font-weight:600;">$64.00</td>
+              <td><span style="color:var(--amber);font-weight:600;">8</span></td>
+              <td><span class="badge badge-green">Live</span></td>
+              <td style="font-size:13px;">156 sold</td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">⋯</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><div class="product-img">💻</div><div style="font-size:13px;font-weight:600;">Webcam 4K Ultra HD</div></div></td>
+              <td><span class="text-sm text-muted">Cameras</span></td>
+              <td style="font-weight:600;">$149.00</td>
+              <td><span style="color:var(--gray);font-weight:600;">0</span></td>
+              <td><span class="badge" style="background:var(--gray-l);color:var(--gray);">Draft</span></td>
+              <td style="font-size:13px;">0 sold</td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">⋯</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="seller-inventory" style="display:none;">
+      <div class="topbar"><div class="page-title">Inventory</div></div>
+      <div class="grid-3 mb-20">
+        <div class="stat"><div class="stat-label">Total SKUs</div><div class="stat-value">48</div></div>
+        <div class="stat"><div class="stat-label">Low stock (&lt;10)</div><div class="stat-value" style="color:var(--amber);">3</div></div>
+        <div class="stat"><div class="stat-label">Out of stock</div><div class="stat-value" style="color:var(--coral);">1</div></div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /seller -->
+
+
+<!-- ══════════════════════════════════════
+     SUPER ADMIN PORTAL
+═══════════════════════════════════════ -->
+<div id="admin" class="portal-screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:0 12px;">
+      <div class="avatar" style="background:var(--purple-l);color:var(--purple-d);width:36px;height:36px;font-size:12px;">SA</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--gray-d);">Super Admin</div>
+        <div style="font-size:11px;color:var(--gray);">admin@marketnest.com</div>
+      </div>
+    </div>
+    <div class="sidebar-section">Platform</div>
+    <div class="nav-item active" onclick="showAdminScreen('dashboard')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showAdminScreen('sellers')">🏪 Sellers</div>
+    <div class="nav-item" onclick="showAdminScreen('orders')">🛍 All orders</div>
+    <div class="nav-item" onclick="showAdminScreen('users')">👥 Users</div>
+    <div class="sidebar-section">Catalogue</div>
+    <div class="nav-item" onclick="showAdminScreen('categories')">📂 Categories</div>
+    <div class="nav-item">🖼 Banners</div>
+    <div class="sidebar-section">Finance</div>
+    <div class="nav-item">💰 Revenue</div>
+    <div class="nav-item">💳 Payouts</div>
+    <div class="sidebar-section">System</div>
+    <div class="nav-item">📋 Audit log</div>
+    <div class="nav-item">⚙️ Settings</div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" style="display:block;">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Platform overview</div>
+          <div class="page-subtitle">MarketNest Admin · Real-time data</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline btn-sm">Export report</button>
+          <button class="btn btn-purple btn-sm" onclick="showAdminScreen('sellers')">+ Add seller</button>
+        </div>
+      </div>
+
+      <!-- Platform stats -->
+      <div class="grid-4 mb-24">
+        <div class="stat" style="border-left:3px solid var(--purple);">
+          <div class="stat-label">GMV (all time)</div>
+          <div class="stat-value">$2.4M</div>
+          <div class="stat-change stat-up">↑ $84K this month</div>
+        </div>
+        <div class="stat" style="border-left:3px solid var(--teal);">
+          <div class="stat-label">Active sellers</div>
+          <div class="stat-value">142</div>
+          <div class="stat-change stat-up">↑ 8 this month</div>
+        </div>
+        <div class="stat" style="border-left:3px solid var(--blue);">
+          <div class="stat-label">Registered buyers</div>
+          <div class="stat-value">28,441</div>
+          <div class="stat-change stat-up">↑ 1,284 this week</div>
+        </div>
+        <div class="stat" style="border-left:3px solid var(--coral);">
+          <div class="stat-label">Platform revenue (10%)</div>
+          <div class="stat-value">$240K</div>
+          <div class="stat-change stat-up">↑ $8.4K this month</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px;align-items:start;">
+        <!-- Top sellers table -->
+        <div>
+          <div class="flex-between mb-16">
+            <div style="font-size:15px;font-weight:700;">Top sellers by GMV</div>
+            <button class="btn btn-ghost btn-sm" onclick="showAdminScreen('sellers')">View all →</button>
+          </div>
+          <div class="card" style="overflow:hidden;">
+            <table class="table">
+              <thead><tr><th>#</th><th>Store</th><th>GMV</th><th>Orders</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">01</td><td><div style="font-size:13px;font-weight:600;">TechHub Store</div><div style="font-size:11px;color:var(--gray);">Electronics</div></td><td style="font-weight:700;color:var(--purple);">$184,200</td><td style="font-size:13px;">2,284</td><td><span class="badge badge-green">Active</span></td></tr>
+                <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">02</td><td><div style="font-size:13px;font-weight:600;">StyleLab Fashion</div><div style="font-size:11px;color:var(--gray);">Fashion</div></td><td style="font-weight:700;color:var(--purple);">$97,440</td><td style="font-size:13px;">4,120</td><td><span class="badge badge-green">Active</span></td></tr>
+                <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">03</td><td><div style="font-size:13px;font-weight:600;">SoundWave Audio</div><div style="font-size:11px;color:var(--gray);">Electronics</div></td><td style="font-weight:700;color:var(--purple);">$62,080</td><td style="font-size:13px;">874</td><td><span class="badge badge-green">Active</span></td></tr>
+                <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--gray);">04</td><td><div style="font-size:13px;font-weight:600;">GreenThumb Plants</div><div style="font-size:11px;color:var(--gray);">Home & Garden</div></td><td style="font-weight:700;color:var(--purple);">$38,200</td><td style="font-size:13px;">2,841</td><td><span class="badge badge-amber">Invited</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- GMV chart -->
+          <div class="card" style="padding:20px;">
+            <div class="flex-between mb-16">
+              <div style="font-size:14px;font-weight:700;">GMV — past 30 days</div>
+              <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--purple);">$84,210</div>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:3px;height:70px;">
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:45%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:60%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:50%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:75%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:55%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:85%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:70%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:95%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple-l);height:65%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--purple);height:100%"></div>
+              <div style="flex:1;border-radius:2px 2px 0 0;background:var(--border);height:40%"></div>
+            </div>
+          </div>
+          <!-- Recent activity -->
+          <div class="card" style="padding:20px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Recent activity</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;"></div><div style="font-size:12px;flex:1;">New seller <b>BrewMaster Co.</b> activated</div><div style="font-size:10px;color:var(--gray);">2m ago</div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;"></div><div style="font-size:12px;flex:1;">Order #8821 placed — $189</div><div style="font-size:10px;color:var(--gray);">5m ago</div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;"></div><div style="font-size:12px;flex:1;">Payout $8,496 to TechHub Store</div><div style="font-size:10px;color:var(--gray);">1h ago</div></div>
+              <div style="display:flex;align-items:center;gap:10px;"><div style="width:6px;height:6px;border-radius:50%;background:var(--coral);flex-shrink:0;"></div><div style="font-size:12px;flex:1;">Seller <b>OldStore Co.</b> suspended</div><div style="font-size:10px;color:var(--gray);">3h ago</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELLERS MANAGEMENT -->
+    <div id="admin-sellers" style="display:none;">
+      <div class="topbar">
+        <div class="page-title">Seller management</div>
+        <div style="display:flex;gap:10px;">
+          <input class="input" placeholder="Search sellers…" style="width:220px;">
+          <button class="btn btn-purple btn-sm" onclick="showCreateSeller()">+ Invite seller</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-4 mb-20">
+        <div class="stat"><div class="stat-label">Total sellers</div><div class="stat-value">142</div></div>
+        <div class="stat"><div class="stat-label">Active</div><div class="stat-value" style="color:var(--green);">128</div></div>
+        <div class="stat"><div class="stat-label">Pending invite</div><div class="stat-value" style="color:var(--amber);">9</div></div>
+        <div class="stat"><div class="stat-label">Suspended</div><div class="stat-value" style="color:var(--coral);">5</div></div>
+      </div>
+
+      <!-- Invite seller modal -->
+      <div id="create-seller-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:500;display:none;align-items:center;justify-content:center;">
+        <div class="card" style="width:440px;padding:28px;position:relative;">
+          <div style="font-family:var(--font-head);font-size:18px;font-weight:700;margin-bottom:4px;">Invite new seller</div>
+          <div class="text-muted text-sm mb-20">They'll receive an email to complete setup</div>
+          <div style="margin-bottom:12px;"><label class="input-label">Store name *</label><input class="input" placeholder="e.g. CraftyStore"></div>
+          <div style="margin-bottom:12px;"><label class="input-label">Seller email *</label><input class="input" placeholder="seller@example.com" type="email"></div>
+          <div style="margin-bottom:20px;"><label class="input-label">Commission rate (%)</label><input class="input" value="10" type="number"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-outline" onclick="hideCreateSeller()">Cancel</button>
+            <button class="btn btn-purple">Send invite</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Store</th><th>Email</th><th>Products</th><th>GMV</th><th>Commission</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="font-size:13px;font-weight:600;">TechHub Store</div><div style="font-size:11px;color:var(--gray);">Joined Jan 2026</div></td>
+              <td style="font-size:12px;color:var(--gray);">tech@hub.com</td>
+              <td style="font-size:13px;">48</td>
+              <td style="font-weight:700;color:var(--purple);">$184,200</td>
+              <td style="font-size:13px;">10%</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">View</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">Suspend</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="font-size:13px;font-weight:600;">StyleLab Fashion</div><div style="font-size:11px;color:var(--gray);">Joined Feb 2026</div></td>
+              <td style="font-size:12px;color:var(--gray);">style@lab.com</td>
+              <td style="font-size:13px;">211</td>
+              <td style="font-weight:700;color:var(--purple);">$97,440</td>
+              <td style="font-size:13px;">10%</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">View</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">Suspend</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="font-size:13px;font-weight:600;">GreenThumb Plants</div><div style="font-size:11px;color:var(--gray);">Invited Jun 1</div></td>
+              <td style="font-size:12px;color:var(--gray);">hello@greenthumb.com</td>
+              <td style="font-size:13px;">0</td>
+              <td style="font-weight:700;color:var(--gray);">$0</td>
+              <td style="font-size:13px;">10%</td>
+              <td><span class="badge badge-amber">Invited</span></td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm">Resend</button><button class="btn btn-ghost btn-sm" style="color:var(--coral);">Cancel</button></div></td>
+            </tr>
+            <tr>
+              <td><div style="font-size:13px;font-weight:600;">BadActor Store</div><div style="font-size:11px;color:var(--gray);">Joined Mar 2026</div></td>
+              <td style="font-size:12px;color:var(--gray);">bad@actor.com</td>
+              <td style="font-size:13px;">22</td>
+              <td style="font-weight:700;color:var(--gray);">$4,820</td>
+              <td style="font-size:13px;">10%</td>
+              <td><span class="badge badge-coral">Suspended</span></td>
+              <td><div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" style="color:var(--green);">Reactivate</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN ORDERS -->
+    <div id="admin-orders" style="display:none;">
+      <div class="topbar"><div class="page-title">All platform orders</div></div>
+      <div class="grid-4 mb-20">
+        <div class="stat"><div class="stat-label">Total orders</div><div class="stat-value">18,441</div></div>
+        <div class="stat"><div class="stat-label">Today</div><div class="stat-value">284</div><div class="stat-change stat-up">↑ 12%</div></div>
+        <div class="stat"><div class="stat-label">Avg. order value</div><div class="stat-value">$67.40</div></div>
+        <div class="stat"><div class="stat-label">Cancellation rate</div><div class="stat-value">2.1%</div><div class="stat-change stat-up">↓ from 3.2%</div></div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Order</th><th>Buyer</th><th>Seller(s)</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#MN-8821</td><td style="font-size:12px;">John D.</td><td style="font-size:12px;">TechHub Store</td><td style="font-weight:700;">$189</td><td><span class="badge badge-blue">Online</span></td><td><span class="badge badge-amber">Processing</span></td><td style="font-size:11px;color:var(--gray);">Jun 2, 2026</td></tr>
+            <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#MN-8820</td><td style="font-size:12px;">Sara R.</td><td style="font-size:12px;">TechHub Store</td><td style="font-weight:700;">$129</td><td><span class="badge badge-amber">COD</span></td><td><span class="badge badge-blue">Shipped</span></td><td style="font-size:11px;color:var(--gray);">Jun 2, 2026</td></tr>
+            <tr><td style="font-family:var(--font-mono);font-size:12px;color:var(--blue);">#MN-8819</td><td style="font-size:12px;">Ahmad K.</td><td style="font-size:12px;">StyleLab</td><td style="font-weight:700;">$54</td><td><span class="badge badge-blue">Online</span></td><td><span class="badge badge-green">Delivered</span></td><td style="font-size:11px;color:var(--gray);">Jun 1, 2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="admin-users" style="display:none;">
+      <div class="topbar"><div class="page-title">Buyer accounts</div></div>
+      <div class="grid-3 mb-20">
+        <div class="stat"><div class="stat-label">Total buyers</div><div class="stat-value">28,441</div></div>
+        <div class="stat"><div class="stat-label">Google OAuth</div><div class="stat-value">71%</div></div>
+        <div class="stat"><div class="stat-label">Repeat buyers</div><div class="stat-value">44%</div></div>
+      </div>
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Buyer</th><th>Email</th><th>Auth method</th><th>Orders</th><th>Total spent</th><th>Joined</th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--blue-l);color:var(--blue);">JD</div><span style="font-size:12px;font-weight:500;">John Doe</span></div></td><td style="font-size:12px;color:var(--gray);">john@gmail.com</td><td><span class="badge badge-blue">Google</span></td><td>12</td><td style="font-weight:600;">$1,240</td><td style="font-size:11px;color:var(--gray);">Mar 2026</td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:28px;height:28px;font-size:10px;background:var(--teal-l);color:var(--teal);">SR</div><span style="font-size:12px;font-weight:500;">Sara Raza</span></div></td><td style="font-size:12px;color:var(--gray);">sara@email.com</td><td><span class="badge badge-purple">Email</span></td><td>5</td><td style="font-weight:600;">$440</td><td style="font-size:11px;color:var(--gray);">Apr 2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div id="admin-categories" style="display:none;">
+      <div class="topbar"><div class="page-title">Categories</div><button class="btn btn-purple btn-sm">+ Add category</button></div>
+      <div class="card" style="overflow:hidden;">
+        <table class="table">
+          <thead><tr><th>Category</th><th>Parent</th><th>Products</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td style="font-size:13px;font-weight:600;">📱 Electronics</td><td style="color:var(--gray);font-size:12px;">Root</td><td>1,241</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td style="font-size:13px;font-weight:600; padding-left:32px;">🎧 Headphones</td><td style="color:var(--gray);font-size:12px;">Electronics</td><td>284</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td style="font-size:13px;font-weight:600; padding-left:32px;">⌨️ Keyboards</td><td style="color:var(--gray);font-size:12px;">Electronics</td><td>102</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td style="font-size:13px;font-weight:600;">👗 Fashion</td><td style="color:var(--gray);font-size:12px;">Root</td><td>8,420</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+            <tr><td style="font-size:13px;font-weight:600;">🏠 Home & Living</td><td style="color:var(--gray);font-size:12px;">Root</td><td>3,842</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /admin -->
+
+
+
+
+<!-- ══ SELLER: ORDER DETAIL MODAL ══ -->
+<div id="seller-orderdetail" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:800;align-items:center;justify-content:center;">
+  <div class="card" style="width:620px;max-height:85vh;overflow-y:auto;padding:28px;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:700;">Order #MN-8821</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:2px;">Jun 2, 2026 · Online payment ✓ · <span class="badge badge-amber" style="font-size:10px;">Processing</span></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('seller-orderdetail').style.display='none'">✕ Close</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+      <div style="padding:14px;background:var(--gray-l);border-radius:var(--radius-md);">
+        <div style="font-size:10px;font-weight:700;color:var(--gray);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Buyer</div>
+        <div style="font-size:13px;font-weight:600;">John Doe</div>
+        <div style="font-size:12px;color:var(--gray);">john.doe@gmail.com · +92 300 1234567</div>
+      </div>
+      <div style="padding:14px;background:var(--gray-l);border-radius:var(--radius-md);">
+        <div style="font-size:10px;font-weight:700;color:var(--gray);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Ship to</div>
+        <div style="font-size:12px;color:var(--gray-d);line-height:1.7;">House 14, Street 5, F-7/1<br>Islamabad 44000 · Pakistan</div>
+      </div>
+    </div>
+    <div style="border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:20px;">
+      <table class="table">
+        <thead><tr><th>Item</th><th>Variant</th><th>Qty</th><th>Price</th><th>Line total</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div class="product-img" style="width:36px;height:36px;font-size:16px;">🎧</div><span style="font-size:12px;font-weight:600;">Sony WH-1000XM5</span></div></td>
+            <td style="font-size:12px;color:var(--gray);">Black</td>
+            <td>1</td><td>$189.00</td>
+            <td style="font-weight:700;">$189.00</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="padding:10px 16px;background:var(--gray-l);text-align:right;font-size:13px;font-weight:700;">Order total: $189.00</div>
+    </div>
+    <div style="padding:16px;background:var(--teal-l);border-radius:var(--radius-md);border:1px solid rgba(15,110,86,0.3);">
+      <div style="font-size:12px;font-weight:700;color:var(--teal-d);margin-bottom:10px;">Update status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select class="input" style="width:180px;cursor:pointer;"><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select>
+        <input class="input" placeholder="Tracking number (required for Shipped)" style="flex:1;min-width:180px;">
+        <button class="btn btn-teal">Save update</button>
+      </div>
+    </div>
+    <div style="margin-top:20px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;">Order timeline</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;flex-shrink:0;">✓</div>
+        <div><div style="font-size:12px;font-weight:600;">Order placed &amp; payment confirmed</div><div style="font-size:11px;color:var(--gray);">Jun 2, 2026 · 10:24 AM</div></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;color:white;font-size:10px;flex-shrink:0;">→</div>
+        <div><div style="font-size:12px;font-weight:600;">Processing started</div><div style="font-size:11px;color:var(--gray);">Jun 2, 2026 · 10:25 AM</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: REVENUE SCREEN ══ -->
+<div id="admin-revenue" style="display:none;margin-left:220px;padding:32px;min-height:calc(100vh - 49px);">
+  <div class="topbar">
+    <div><div class="page-title">Revenue & Finance</div><div class="page-subtitle">Platform-wide financial overview</div></div>
+    <button class="btn btn-outline btn-sm">Export report</button>
+  </div>
+  <div class="grid-4 mb-24">
+    <div class="stat" style="border-left:3px solid var(--purple);"><div class="stat-label">GMV all-time</div><div class="stat-value">$2.4M</div></div>
+    <div class="stat" style="border-left:3px solid var(--teal);"><div class="stat-label">Platform revenue (10%)</div><div class="stat-value">$240K</div></div>
+    <div class="stat" style="border-left:3px solid var(--blue);"><div class="stat-label">Payouts issued</div><div class="stat-value">$2.16M</div></div>
+    <div class="stat" style="border-left:3px solid var(--amber);"><div class="stat-label">Pending payouts</div><div class="stat-value" style="color:var(--amber);">$84K</div></div>
+  </div>
+  <div class="grid-2" style="align-items:start;gap:20px;">
+    <div class="card" style="padding:20px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Monthly GMV</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:16px;">Jan – Jun 2026</div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:100px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="flex:1;width:100%;border-radius:4px 4px 0 0;background:var(--purple-l);" style2="height:45%"></div><div style="font-size:9px;color:var(--gray);">Jan</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:4px 4px 0 0;background:var(--purple-l);height:60px;"></div><div style="font-size:9px;color:var(--gray);">Feb</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:4px 4px 0 0;background:var(--purple-l);height:72px;"></div><div style="font-size:9px;color:var(--gray);">Mar</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:4px 4px 0 0;background:var(--purple-l);height:80px;"></div><div style="font-size:9px;color:var(--gray);">Apr</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:4px 4px 0 0;background:var(--purple-l);height:88px;"></div><div style="font-size:9px;color:var(--gray);">May</div></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:4px 4px 0 0;background:var(--purple);height:100px;"></div><div style="font-size:9px;color:var(--gray);font-weight:700;">Jun</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Revenue by category</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Electronics</span><span style="font-size:12px;font-weight:700;color:var(--purple);">$108,200 · 45%</span></div><div class="progress-track"><div class="progress-fill" style="width:45%;background:var(--purple);"></div></div></div>
+        <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Fashion</span><span style="font-size:12px;font-weight:700;color:var(--teal);">$60,840 · 25%</span></div><div class="progress-track"><div class="progress-fill" style="width:25%;background:var(--teal);"></div></div></div>
+        <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Home &amp; Living</span><span style="font-size:12px;font-weight:700;color:var(--blue);">$36,500 · 15%</span></div><div class="progress-track"><div class="progress-fill" style="width:15%;background:var(--blue);"></div></div></div>
+        <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Sports &amp; Fitness</span><span style="font-size:12px;font-weight:700;color:var(--coral);">$24,320 · 10%</span></div><div class="progress-track"><div class="progress-fill" style="width:10%;background:var(--coral);"></div></div></div>
+        <div><div class="flex-between mb-4"><span style="font-size:12px;font-weight:500;">Other</span><span style="font-size:12px;font-weight:700;color:var(--gray);">$12,140 · 5%</span></div><div class="progress-track"><div class="progress-fill" style="width:5%;background:var(--gray);"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;">All seller payouts</div>
+    <table class="table">
+      <thead><tr><th>Seller</th><th>Period</th><th>Gross GMV</th><th>Commission (10%)</th><th>Net payout</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        <tr><td style="font-size:13px;font-weight:600;">TechHub Store</td><td style="font-size:12px;color:var(--gray);">May 24–31</td><td>$9,440</td><td style="color:var(--coral);">$944</td><td style="font-weight:700;color:var(--green);">$8,496</td><td><span class="badge badge-green">Paid</span></td><td style="font-size:11px;color:var(--gray);">Jun 1</td></tr>
+        <tr><td style="font-size:13px;font-weight:600;">StyleLab Fashion</td><td style="font-size:12px;color:var(--gray);">May 24–31</td><td>$7,200</td><td style="color:var(--coral);">$720</td><td style="font-weight:700;color:var(--green);">$6,480</td><td><span class="badge badge-green">Paid</span></td><td style="font-size:11px;color:var(--gray);">Jun 1</td></tr>
+        <tr><td style="font-size:13px;font-weight:600;">TechHub Store</td><td style="font-size:12px;color:var(--gray);">Jun 1–7</td><td>$14,267</td><td style="color:var(--coral);">$1,427</td><td style="font-weight:700;color:var(--amber);">$12,840</td><td><span class="badge badge-amber">Pending</span></td><td style="font-size:11px;color:var(--gray);">Est. Jun 7</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ADMIN: AUDIT LOG ══ -->
+<div id="admin-auditlog" style="display:none;margin-left:220px;padding:32px;min-height:calc(100vh - 49px);">
+  <div class="topbar">
+    <div><div class="page-title">Audit log</div><div class="page-subtitle">All admin and system actions</div></div>
+    <div style="display:flex;gap:10px;"><input class="input" placeholder="Filter by actor or action…" style="width:240px;"><button class="btn btn-outline btn-sm">Export</button></div>
+  </div>
+  <div class="card" style="overflow:hidden;">
+    <table class="table">
+      <thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Entity</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--gray);">2026-06-02 10:42:01</td><td><span class="badge badge-purple">super admin</span></td><td style="font-size:12px;font-weight:600;color:var(--coral);">seller.suspended</td><td style="font-size:12px;">BadActor Store</td><td style="font-size:11px;color:var(--gray);">Reason: Selling counterfeit goods</td></tr>
+        <tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--gray);">2026-06-02 10:30:12</td><td><span class="badge badge-purple">super admin</span></td><td style="font-size:12px;font-weight:600;color:var(--green);">seller.created</td><td style="font-size:12px;">BrewMaster Co.</td><td style="font-size:11px;color:var(--gray);">Invite sent to brew@master.com</td></tr>
+        <tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--gray);">2026-06-02 09:15:44</td><td><span class="badge badge-teal">system</span></td><td style="font-size:12px;font-weight:600;color:var(--blue);">payout.processed</td><td style="font-size:12px;">TechHub Store</td><td style="font-size:11px;color:var(--gray);">Amount: $8,496 — period May 24-31</td></tr>
+        <tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--gray);">2026-06-01 18:02:30</td><td><span class="badge badge-purple">super admin</span></td><td style="font-size:12px;font-weight:600;color:var(--teal);">category.created</td><td style="font-size:12px;">Gaming Accessories</td><td style="font-size:11px;color:var(--gray);">Parent: Electronics</td></tr>
+        <tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--gray);">2026-06-01 14:11:05</td><td><span class="badge badge-teal">system</span></td><td style="font-size:12px;font-weight:600;">order.cancelled</td><td style="font-size:12px;">Order #MN-8800</td><td style="font-size:11px;color:var(--gray);">Buyer requested cancellation — refund initiated</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ BUYER: SEARCH RESULTS ══ -->
+<div id="buyer-search" class="buyer-body" style="display:none;">
+  <div style="display:flex;gap:24px;align-items:start;">
+    <!-- Filters sidebar -->
+    <div style="width:220px;flex-shrink:0;">
+      <div class="card" style="padding:20px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px;">Filters</div>
+        <div style="margin-bottom:16px;">
+          <div class="input-label">Category</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked> Electronics (284)</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox"> Accessories (102)</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox"> Audio (67)</label>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div class="input-label">Price range</div>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <input class="input" placeholder="Min" value="50" style="padding:6px 10px;font-size:12px;">
+            <input class="input" placeholder="Max" value="300" style="padding:6px 10px;font-size:12px;">
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div class="input-label">Min. rating</div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <button class="btn btn-outline btn-sm">Any</button>
+            <button class="btn btn-primary btn-sm">4★+</button>
+            <button class="btn btn-outline btn-sm">5★</button>
+          </div>
+        </div>
+        <div>
+          <div class="input-label">Seller</div>
+          <input class="input" placeholder="Search sellers…" style="margin-top:6px;">
+        </div>
+        <button class="btn btn-outline w-full" style="margin-top:16px;justify-content:center;">Reset filters</button>
+      </div>
+    </div>
+    <!-- Results -->
+    <div style="flex:1;">
+      <div class="flex-between mb-16">
+        <div>
+          <div style="font-size:15px;font-weight:700;">Results for "headphones"</div>
+          <div style="font-size:13px;color:var(--gray);margin-top:2px;">284 products found · AI-powered semantic search</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--gray);">Sort by:</span>
+          <select class="input" style="width:160px;cursor:pointer;font-size:13px;padding:8px 12px;"><option>Relevance</option><option>Price: Low to High</option><option>Price: High to Low</option><option>Newest</option><option>Best rated</option></select>
+        </div>
+      </div>
+      <div class="product-grid">
+        <div class="product-card"><div class="product-thumb">🎧<div style="position:absolute;top:10px;left:10px;" class="badge badge-purple" style="font-size:9px;">AI match</div></div><div class="product-info"><div class="product-title">Sony WH-1000XM5 Noise Cancelling</div><div class="product-seller">by SoundWave Store</div><div class="stars">★★★★★</div><div class="flex-center mt-8"><span class="product-price">$189.00</span><span class="product-price-old">$249.00</span></div></div></div>
+        <div class="product-card"><div class="product-thumb" style="background:var(--blue-l);">🎵</div><div class="product-info"><div class="product-title">Bose QuietComfort 45 Wireless</div><div class="product-seller">by AudioZone</div><div class="stars">★★★★★</div><div class="flex-center mt-8"><span class="product-price">$279.00</span></div></div></div>
+        <div class="product-card"><div class="product-thumb" style="background:var(--teal-l);">🔊</div><div class="product-info"><div class="product-title">JBL Tune 770NC Foldable BT</div><div class="product-seller">by TechHub Store</div><div class="stars">★★★★<span style="color:var(--border);">★</span></div><div class="flex-center mt-8"><span class="product-price">$99.99</span><span class="product-price-old">$129.99</span></div></div></div>
+        <div class="product-card"><div class="product-thumb" style="background:var(--amber-l);">🎶</div><div class="product-info"><div class="product-title">Anker Soundcore Life Q30 ANC</div><div class="product-seller">by GadgetPlus</div><div class="stars">★★★★<span style="color:var(--border);">★</span></div><div class="flex-center mt-8"><span class="product-price">$59.99</span></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BUYER: ORDER CONFIRMATION ══ -->
+<div id="buyer-confirmation" class="buyer-body" style="display:none;max-width:600px;margin:0 auto;">
+  <div style="text-align:center;padding:40px 0 24px;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--green-l);border:3px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px;">✓</div>
+    <div style="font-family:var(--font-head);font-size:26px;font-weight:800;color:var(--gray-d);margin-bottom:8px;">Order confirmed!</div>
+    <div style="font-size:14px;color:var(--gray);max-width:380px;margin:0 auto;">Thank you, John! Your order has been placed and the seller has been notified. You'll receive an email shortly.</div>
+  </div>
+  <div class="card" style="padding:24px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:0.06em;text-transform:uppercase;">Order number</div>
+        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--blue);margin-top:4px;">#MN-20240602-8821</div>
+      </div>
+      <span class="badge badge-amber">Processing</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎧</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Sony WH-1000XM5 · Black</div><div style="font-size:12px;color:var(--gray);">Qty: 1 · by SoundWave Store</div></div>
+        <div style="font-size:14px;font-weight:700;">$189.00</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:52px;height:52px;background:var(--gray-l);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👟</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Air Max Pro Running · Size 42</div><div style="font-size:12px;color:var(--gray);">Qty: 1 · by NikeSports Store</div></div>
+        <div style="font-size:14px;font-weight:700;">$79.99</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;">
+      <div class="flex-between text-sm mb-4"><span class="text-muted">Subtotal</span><span>$268.99</span></div>
+      <div class="flex-between text-sm mb-4"><span class="text-muted">Shipping</span><span style="color:var(--green);font-weight:600;">Free</span></div>
+      <div class="flex-between" style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-top:8px;"><span>Total paid</span><span>$268.99</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="card" style="padding:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Ship to</div>
+      <div style="font-size:12px;color:var(--gray-d);line-height:1.7;">John Doe<br>House 14, Street 5, F-7/1<br>Islamabad 44000</div>
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Estimated delivery</div>
+      <div style="font-size:13px;font-weight:600;color:var(--gray-d);">Jun 5 – Jun 7, 2026</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:4px;">Standard delivery · Free</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button class="btn btn-outline" onclick="showBuyerScreen('orders')">Track order →</button>
+    <button class="btn btn-primary" onclick="showBuyerScreen('home')">Continue shopping</button>
+  </div>
+</div>
+
+<!-- ══ BUYER: SELLER STOREFRONT ══ -->
+<div id="buyer-storefront" class="buyer-body" style="display:none;">
+  <!-- Store hero -->
+  <div style="background:linear-gradient(135deg,#1a1a18 0%,#3a3a38 100%);border-radius:var(--radius-xl);padding:32px 40px;display:flex;gap:24px;align-items:center;margin-bottom:28px;">
+    <div style="width:72px;height:72px;border-radius:var(--radius-lg);background:var(--teal-l);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;border:3px solid rgba(255,255,255,0.15);">🔌</div>
+    <div>
+      <div style="font-family:var(--font-head);font-size:22px;font-weight:800;color:white;margin-bottom:4px;">TechHub Store</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;">Electronics &amp; Gadgets · Member since Jan 2026</div>
+      <div style="display:flex;gap:16px;">
+        <div style="text-align:center;"><div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:white;">48</div><div style="font-size:10px;color:rgba(255,255,255,0.5);">Products</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:white;">2,284</div><div style="font-size:10px;color:rgba(255,255,255,0.5);">Orders</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--teal);">4.8★</div><div style="font-size:10px;color:rgba(255,255,255,0.5);">Rating</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:16px;">All products from TechHub Store</div>
+  <div class="product-grid">
+    <div class="product-card"><div class="product-thumb">🎧</div><div class="product-info"><div class="product-title">Sony WH-1000XM5</div><div class="stars">★★★★★</div><div class="flex-center mt-8"><span class="product-price">$189.00</span><span class="product-price-old">$249.00</span></div></div></div>
+    <div class="product-card"><div class="product-thumb" style="background:var(--gray-l);">⌨️</div><div class="product-info"><div class="product-title">Mechanical Keyboard 75%</div><div class="stars">★★★★<span style="color:var(--border);">★</span></div><div class="flex-center mt-8"><span class="product-price">$129.00</span></div></div></div>
+    <div class="product-card"><div class="product-thumb" style="background:var(--blue-l);">🔌</div><div class="product-info"><div class="product-title">USB-C Hub Pro 7-in-1</div><div class="stars">★★★★★</div><div class="flex-center mt-8"><span class="product-price">$64.00</span></div></div></div>
+    <div class="product-card"><div class="product-thumb" style="background:var(--teal-l);">💻</div><div class="product-info"><div class="product-title">Webcam 4K Ultra HD</div><div class="stars">★★★★<span style="color:var(--border);">★</span></div><div class="flex-center mt-8"><span class="product-price">$149.00</span></div></div></div>
+  </div>
+</div>
+
+<script>
+function showPortal(id) {
+  document.querySelectorAll('.portal-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.portal-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`[data-portal="${id}"]`).classList.add('active');
+  // close cart
+  document.getElementById('cart-panel').style.display = 'none';
+}
+
+function showBuyerScreen(name) {
+  ['home','product','checkout','orders','login'].forEach(s => {
+    document.getElementById('buyer-'+s).style.display = 'none';
+  });
+  document.getElementById('buyer-'+name).style.display = 'block';
+  // update sub-tabs
+  const tabs = document.querySelectorAll('#buyer-screen-tabs .portal-tab');
+  const map = {home:0,product:1,checkout:2,orders:3,login:4};
+  tabs.forEach((t,i) => {
+    t.classList.remove('active');
+    t.style.borderBottom = '';
+    t.style.color = '';
+  });
+  if (map[name] !== undefined) {
+    const tab = tabs[map[name]];
+    tab.classList.add('active');
+    tab.style.borderBottom = '2px solid var(--gray-d)';
+    tab.style.color = 'var(--gray-d)';
+  }
+}
+
+function showSellerScreen(name) {
+  ['dashboard','addproduct','orders','earnings','analytics','products','inventory'].forEach(s => {
+    const el = document.getElementById('seller-'+s);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById('seller-'+name);
+  if (el) el.style.display = 'block';
+  // update sidebar
+  document.querySelectorAll('#seller .nav-item').forEach(n => n.classList.remove('active','teal'));
+  const map = {dashboard:0,analytics:1,products:2,addproduct:3,inventory:4,orders:5,earnings:6};
+  const items = document.querySelectorAll('#seller .nav-item');
+  if (map[name] !== undefined && items[map[name]]) {
+    items[map[name]].classList.add('active','teal');
+  }
+}
+
+function showAdminScreen(name) {
+  ['dashboard','sellers','orders','users','categories'].forEach(s => {
+    const el = document.getElementById('admin-'+s);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById('admin-'+name);
+  if (el) el.style.display = 'block';
+}
+
+function toggleCart() {
+  const p = document.getElementById('cart-panel');
+  p.style.display = p.style.display === 'none' || !p.style.display ? 'flex' : 'none';
+  p.style.flexDirection = 'column';
+}
+
+function showCreateSeller() {
+  const m = document.getElementById('create-seller-modal');
+  m.style.display = 'flex';
+}
+function hideCreateSeller() {
+  document.getElementById('create-seller-modal').style.display = 'none';
+}
+
+// Extend buyer screens to include new ones
+const allBuyerScreens = ['home','product','checkout','orders','login','search','confirmation','storefront'];
+
+function showBuyerScreen(name) {
+  allBuyerScreens.forEach(s => {
+    const el = document.getElementById('buyer-'+s);
+    if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById('buyer-'+name);
+  if (el) el.style.display = 'block';
+  // update sub-tabs
+  const tabs = document.querySelectorAll('#buyer-screen-tabs .portal-tab');
+  const map = {home:0,product:1,checkout:2,orders:3,login:4};
+  tabs.forEach((t) => {
+    t.classList.remove('active');
+    t.style.borderBottom = '';
+    t.style.color = '';
+  });
+  if (map[name] !== undefined) {
+    const tab = tabs[map[name]];
+    if (tab) {
+      tab.classList.add('active');
+      tab.style.borderBottom = '2px solid var(--gray-d)';
+      tab.style.color = 'var(--gray-d)';
+    }
+  }
+  // close cart
+  document.getElementById('cart-panel').style.display = 'none';
+}
+
+// Admin screens extension
+function showAdminScreen(name) {
+  ['dashboard','sellers','orders','users','categories'].forEach(s => {
+    const el = document.getElementById('admin-'+s);
+    if (el) el.style.display = 'none';
+  });
+  // standalone revenue/audit screens
+  ['admin-revenue','admin-auditlog'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  if (name === 'revenue') {
+    const el = document.getElementById('admin-revenue');
+    if (el) el.style.display = 'block';
+  } else if (name === 'auditlog') {
+    const el = document.getElementById('admin-auditlog');
+    if (el) el.style.display = 'block';
+  } else {
+    const el = document.getElementById('admin-'+name);
+    if (el) el.style.display = 'block';
+  }
+  // Update admin sidebar active state
+  document.querySelectorAll('#admin .nav-item').forEach(n => n.classList.remove('active'));
+}
+
+// Wire up admin sidebar revenue & audit links
+document.querySelectorAll('#admin .nav-item').forEach(item => {
+  if (item.textContent.includes('Revenue')) item.onclick = () => showAdminScreen('revenue');
+  if (item.textContent.includes('Audit'))   item.onclick = () => showAdminScreen('auditlog');
+});
+
+// Wire up buyer search & storefront
+document.querySelectorAll('#buyer-screen-tabs .portal-tab').forEach(tab => {
+  if (tab.textContent.includes('Home')) tab.onclick = () => showBuyerScreen('home');
+});
+
+// Wire up sub-nav tabs for search/storefront
+const buyerSubNav = document.getElementById('buyer-screen-tabs');
+if (buyerSubNav) {
+  const extraTabs = [
+    {label:'Search Results', screen:'search'},
+    {label:'Order Confirmed', screen:'confirmation'},
+    {label:'Seller Store', screen:'storefront'},
+  ];
+  extraTabs.forEach(({label, screen}) => {
+    const btn = document.createElement('button');
+    btn.className = 'portal-tab';
+    btn.style.fontSize = '13px';
+    btn.style.padding = '12px 16px';
+    btn.textContent = label;
+    btn.onclick = () => showBuyerScreen(screen);
+    buyerSubNav.appendChild(btn);
+  });
+}
+
+// Seller order detail open
+document.querySelectorAll('#seller .table tbody tr').forEach(row => {
+  row.addEventListener('click', function(e) {
+    if (!e.target.matches('button')) {
+      const modal = document.getElementById('seller-orderdetail');
+      if (modal) { modal.style.display = 'flex'; }
+    }
+  });
+});
+
+// Init
+showBuyerScreen('home');
+</script>
+</body>
+</html>

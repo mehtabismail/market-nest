@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(awk -F= '/^[A-Z_]+=/{v=substr\\($0,index\\($0,\"=\"\\)+1\\); if\\(v==\"\" \\) print $1\": EMPTY\"; else if \\(v ~ /your-|xxx|CHANGE|placeholder|<|example/\\) print $1\": PLACEHOLDER\"; else print $1\": set\"}' .env)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(grep -E '\\\\.env$|\\\\.env\\\\.local|\\\\.pem$|\\\\.key$')"
+    ]
+  }
+}

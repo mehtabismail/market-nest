@@ -1,0 +1,20 @@
+{
+  "name": "@marketnest/shared-types",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./buyer": "./dist/buyer.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo ok"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

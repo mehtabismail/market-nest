@@ -1,0 +1,359 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import type { OrderDetailDTO, OrderSummaryDTO } from '@marketnest/shared-types';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { CartService } from '../cart/cart.service';
+import { ProductsService } from '../products/products.service';
+import type { RequestUser } from '../auth/auth.types';
+import { CheckoutBodyDto } from './dto/checkout.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+
+const SHIPPING_FEE = 5;
+
+@Injectable()
+export class OrdersService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cart: CartService,
+    private readonly products: ProductsService,
+    private readonly notifications: NotificationsService,
+  ) {}
+
+  async checkout(
+    user: RequestUser,
+    dto: CheckoutBodyDto,
+    guestSession?: string,
+  ) {
+    if (user.role !== 'buyer' && user.role !== 'superadmin') {
+      throw new ForbiddenException('Buyer account required');
+    }
+
+    const cart = await this.cart.getCart(guestSession, user.id);
+    if (!cart.items.length) {
+      throw new BadRequestException('Cart is empty');
+    }
+
+    const subtotal = cart.subtotal;
+    const shippingFee = SHIPPING_FEE;
+    const total = subtotal + shippingFee;
+
+    const initialStatus =
+      dto.paymentMethod === 'cod' ? 'pending_cod' : 'pending_payment';
+
+    const order = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          buyerId: user.id,
+          status: initialStatus,
+          paymentMethod: dto.paymentMethod,
+          subtotal,
+          shippingFee,
+          total,
+          shippingAddress: dto.shippingAddress as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      for (const line of cart.items) {
+        const product = await this.products.getPublishedForPurchase(line.productId);
+
+        if (product.stockQty < line.quantity) {
+          throw new BadRequestException(`Insufficient stock for ${product.title}`);
+        }
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: { stockQty: { decrement: line.quantity } },
+        });
+
+        await tx.orderItem.create({
+          data: {
+            orderId: created.id,
+            productId: product.id,
+            sellerId: product.sellerId,
+            ownerType: product.ownerType,
+            variantId: line.variantId,
+            quantity: line.quantity,
+            unitPrice: line.unitPrice,
+            status: initialStatus === 'pending_cod' ? 'confirmed' : 'pending_payment',
+          },
+        });
+      }
+
+      if (dto.paymentMethod === 'cod') {
+        await tx.order.update({
+          where: { id: created.id },
+          data: { status: 'confirmed' },
+        });
+      }
+
+      return created;
+    });
+
+    await this.cart.clearForCheckout(guestSession, user.id);
+
+    void this.notifications.enqueueEmail('order_confirmation_buyer', { orderId: order.id });
+
+    const sellerIds = [
+      ...new Set(
+        (
+          await this.prisma.orderItem.findMany({
+            where: { orderId: order.id, sellerId: { not: null } },
+            select: { sellerId: true },
+          })
+        ).map((i) => i.sellerId!),
+      ),
+    ];
+    for (const sellerId of sellerIds) {
+      void this.notifications.enqueueEmail('seller_new_order', { orderId: order.id, sellerId });
+    }
+
+    return this.getBuyerOrder(user.id, order.id);
+  }
+
+  async listBuyerOrders(userId: string): Promise<OrderSummaryDTO[]> {
+    const orders = await this.prisma.order.findMany({
+      where: { buyerId: userId },
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { items: true } } },
+    });
+
+    return orders.map((o) => this.toSummary(o, o._count.items));
+  }
+
+  async getBuyerOrder(userId: string, orderId: string): Promise<OrderDetailDTO> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, buyerId: userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: { title: true, ownerType: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+    return this.toDetail(order);
+  }
+
+  async cancelBuyerOrder(userId: string, orderId: string): Promise<OrderDetailDTO> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, buyerId: userId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (!['pending_cod', 'pending_payment'].includes(order.status)) {
+      throw new BadRequestException(
+        'Only pending COD or pending payment orders can be cancelled',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { increment: item.quantity } },
+        });
+      }
+
+      await tx.orderItem.updateMany({
+        where: { orderId: order.id },
+        data: { status: 'cancelled' },
+      });
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: 'cancelled' },
+      });
+    });
+
+    return this.getBuyerOrder(userId, orderId);
+  }
+
+  async listSellerOrders(user: RequestUser) {
+    if (!user.sellerId) throw new ForbiddenException('Seller profile required');
+
+    const items = await this.prisma.orderItem.findMany({
+      where: { sellerId: user.sellerId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order: {
+          include: {
+            buyer: { select: { fullName: true, phone: true } },
+          },
+        },
+        product: { select: { title: true } },
+      },
+    });
+
+    const byOrder = new Map<string, typeof items>();
+    for (const item of items) {
+      const list = byOrder.get(item.orderId) ?? [];
+      list.push(item);
+      byOrder.set(item.orderId, list);
+    }
+
+    return Array.from(byOrder.entries()).map(([orderId, lines]) => ({
+      orderId,
+      status: lines[0].status,
+      createdAt: lines[0].order.createdAt,
+      buyerName: lines[0].order.buyer?.fullName,
+      buyerPhone: lines[0].order.buyer?.phone,
+      paymentMethod: lines[0].order.paymentMethod,
+      shippingAddress: lines[0].order.shippingAddress,
+      items: lines.map((l) => ({
+        id: l.id,
+        title: l.product.title,
+        quantity: l.quantity,
+        unitPrice: Number(l.unitPrice),
+        status: l.status,
+        trackingNumber: l.trackingNumber,
+        courierName: l.courierName,
+      })),
+      sellerTotal: lines.reduce((s, l) => s + Number(l.unitPrice) * l.quantity, 0),
+    }));
+  }
+
+  async updateSellerOrderItem(
+    user: RequestUser,
+    orderItemId: string,
+    dto: UpdateOrderStatusDto,
+  ) {
+    if (!user.sellerId) throw new ForbiddenException('Seller profile required');
+
+    const item = await this.prisma.orderItem.findFirst({
+      where: { id: orderItemId, sellerId: user.sellerId },
+      include: { order: true },
+    });
+
+    if (!item) throw new NotFoundException('Order item not found');
+
+    if (dto.status === 'shipped' && (!dto.trackingNumber || !dto.courierName)) {
+      throw new BadRequestException('Tracking number and courier required when shipping');
+    }
+
+    const updated = await this.prisma.orderItem.update({
+      where: { id: orderItemId },
+      data: {
+        status: dto.status,
+        trackingNumber: dto.trackingNumber,
+        courierName: dto.courierName,
+      },
+    });
+
+    if (dto.status === 'shipped') {
+      void this.notifications.enqueueEmail('order_shipped_buyer', {
+        orderId: item.orderId,
+      });
+    }
+
+    return updated;
+  }
+
+  /** Platform-owned fulfilment queue (admin) */
+  async listPlatformFulfilment() {
+    return this.prisma.orderItem.findMany({
+      where: { ownerType: 'platform_owned' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        order: true,
+        product: { select: { title: true, sku: true } },
+      },
+    });
+  }
+
+  async listAllAdmin() {
+    return this.prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        buyer: { select: { fullName: true } },
+        _count: { select: { items: true } },
+      },
+    });
+  }
+
+  async confirmPayment(orderId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.update({
+        where: { id: orderId },
+        data: { status: 'confirmed' },
+      });
+      await tx.orderItem.updateMany({
+        where: { orderId },
+        data: { status: 'confirmed' },
+      });
+      await tx.payment.updateMany({
+        where: { orderId },
+        data: { status: 'succeeded', paidAt: new Date() },
+      });
+      void this.notifications.enqueueEmail('order_confirmation_buyer', { orderId });
+      return order;
+    });
+  }
+
+  private toSummary(
+    order: { id: string; status: string; paymentMethod: string; subtotal: unknown; shippingFee: unknown; total: unknown; createdAt: Date },
+    itemCount: number,
+  ): OrderSummaryDTO {
+    return {
+      id: order.id,
+      status: order.status,
+      paymentMethod: order.paymentMethod as OrderSummaryDTO['paymentMethod'],
+      subtotal: Number(order.subtotal),
+      shippingFee: Number(order.shippingFee),
+      total: Number(order.total),
+      createdAt: order.createdAt.toISOString(),
+      itemCount,
+    };
+  }
+
+  private toDetail(order: {
+    id: string;
+    status: string;
+    paymentMethod: string;
+    subtotal: unknown;
+    shippingFee: unknown;
+    total: unknown;
+    createdAt: Date;
+    shippingAddress: unknown;
+    items: Array<{
+      id: string;
+      productId: string;
+      quantity: number;
+      unitPrice: unknown;
+      status: string;
+      trackingNumber: string | null;
+      courierName: string | null;
+      product: { title: string; ownerType: string };
+    }>;
+  }): OrderDetailDTO {
+    return {
+      ...this.toSummary(order, order.items.length),
+      shippingAddress: order.shippingAddress as OrderDetailDTO['shippingAddress'],
+      items: order.items.map((i) => ({
+        id: i.id,
+        productId: i.productId,
+        title: i.product.title,
+        quantity: i.quantity,
+        unitPrice: Number(i.unitPrice),
+        isMarketNestOfficial: i.product.ownerType === 'platform_owned',
+        status: i.status,
+        trackingNumber: i.trackingNumber,
+        courierName: i.courierName,
+      })),
+    };
+  }
+}

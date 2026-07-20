@@ -1,0 +1,34 @@
+{
+  "name": "marketnest",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "env:setup": "node scripts/env/setup.cjs",
+    "env:link": "node scripts/env/link-api-env.cjs",
+    "bench:health": "node scripts/bench-health.mjs",
+    "db:generate": "npm run db:generate -w @marketnest/api",
+    "db:migrate": "npm run db:migrate -w @marketnest/api",
+    "db:push": "npm run db:push -w @marketnest/api"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@10.9.0",
+  "dependencies": {
+    "stripe": "^22.2.0"
+  }
+}

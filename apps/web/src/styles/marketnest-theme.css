@@ -1,0 +1,250 @@
+/* MarketNest unified theme — landing page palette (all portals) */
+
+.mn-theme,
+.shop-theme,
+.seller-theme,
+.admin-theme {
+  --mn-shadow: 0 2px 24px rgba(14, 15, 17, 0.08);
+  --mn-shadow-lg: 0 8px 48px rgba(14, 15, 17, 0.12);
+  background-color: #f5f3ee;
+  color: #0e0f11;
+  min-height: 100vh;
+}
+
+.mn-page-title,
+.shop-section-title {
+  font-family: var(--font-outfit), 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #0e0f11;
+}
+
+.mn-card,
+.shop-card {
+  border: 1px solid #d5d0c7;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--mn-shadow);
+}
+
+.mn-btn-primary,
+.shop-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  background: #0e0f11;
+  color: #f5f3ee;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.mn-btn-primary:hover,
+.shop-btn-primary:hover {
+  background: #e8472a;
+}
+
+.mn-btn-secondary,
+.shop-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  border: 1.5px solid #d5d0c7;
+  background: transparent;
+  color: #0e0f11;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease;
+}
+
+.mn-btn-secondary:hover,
+.shop-btn-secondary:hover {
+  border-color: #0e0f11;
+}
+
+.mn-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid #d5d0c7;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b6860;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.mn-chip:hover {
+  border-color: #1a6b5a;
+  color: #1a6b5a;
+  background: #e0f0eb;
+}
+
+.mn-chip-active {
+  border-color: #1a6b5a;
+  color: #1a6b5a;
+  background: #e0f0eb;
+}
+
+.mn-nav-active {
+  background: #e0f0eb;
+  color: #1a6b5a;
+}
+
+.mn-nav-item {
+  color: #6b6860;
+}
+
+.mn-nav-item:hover {
+  background: #ede9e1;
+  color: #0e0f11;
+}
+
+.admin-theme .mn-nav-active,
+.admin-theme .mn-chip-active {
+  background: #fdf3e1;
+  border-color: #c8973a;
+  color: #0e0f11;
+}
+
+.admin-theme .mn-chip:hover {
+  border-color: #c8973a;
+  background: #fdf3e1;
+  color: #0e0f11;
+}
+
+.mn-reveal,
+.shop-reveal {
+  animation: shop-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Legacy class remapping inside themed portals */
+.mn-theme .card,
+.shop-theme .card,
+.seller-theme .card,
+.admin-theme .card {
+  border-color: #d5d0c7;
+  border-radius: 20px;
+  box-shadow: var(--mn-shadow);
+}
+
+.mn-theme .btn-blue,
+.mn-theme .btn-teal,
+.mn-theme .btn-purple,
+.shop-theme .btn-blue,
+.shop-theme .btn-teal,
+.shop-theme .btn-purple,
+.seller-theme .btn-blue,
+.seller-theme .btn-teal,
+.seller-theme .btn-purple,
+.admin-theme .btn-blue,
+.admin-theme .btn-teal,
+.admin-theme .btn-purple {
+  border-radius: 9999px !important;
+  background: #0e0f11 !important;
+  color: #f5f3ee !important;
+}
+
+.mn-theme .btn-blue:hover,
+.mn-theme .btn-teal:hover,
+.mn-theme .btn-purple:hover,
+.shop-theme .btn-blue:hover,
+.shop-theme .btn-teal:hover,
+.shop-theme .btn-purple:hover,
+.seller-theme .btn-blue:hover,
+.seller-theme .btn-teal:hover,
+.seller-theme .btn-purple:hover,
+.admin-theme .btn-blue:hover,
+.admin-theme .btn-teal:hover,
+.admin-theme .btn-purple:hover {
+  background: #e8472a !important;
+}
+
+.mn-theme .btn-outline,
+.shop-theme .btn-outline,
+.seller-theme .btn-outline,
+.admin-theme .btn-outline {
+  border-color: #d5d0c7 !important;
+  border-radius: 9999px !important;
+}
+
+.mn-theme .text-blue,
+.mn-theme .text-teal,
+.mn-theme .text-teal-dark,
+.shop-theme .text-blue,
+.seller-theme .text-teal,
+.seller-theme .text-teal-dark {
+  color: #1a6b5a !important;
+}
+
+.admin-theme .text-purple,
+.admin-theme .text-purple-dark {
+  color: #c8973a !important;
+}
+
+.mn-theme .bg-blue-light,
+.mn-theme .bg-teal-light,
+.seller-theme .bg-teal-light,
+.shop-theme .bg-blue-light {
+  background-color: #e0f0eb !important;
+}
+
+.admin-theme .bg-purple-light {
+  background-color: #fdf3e1 !important;
+}
+
+.mn-theme .bg-bg,
+.shop-theme .bg-bg,
+.seller-theme .bg-bg,
+.admin-theme .bg-bg {
+  background-color: #f5f3ee !important;
+}
+
+.mn-theme .input:focus,
+.shop-theme .input:focus,
+.seller-theme .input:focus,
+.admin-theme .input:focus {
+  border-color: #1a6b5a !important;
+  --tw-ring-color: rgb(26 107 90 / 0.15);
+}
+
+.admin-theme .input:focus {
+  border-color: #c8973a !important;
+  --tw-ring-color: rgb(200 151 58 / 0.15);
+}
+
+.mn-theme .stat,
+.shop-theme .stat,
+.seller-theme .stat,
+.admin-theme .stat {
+  border-radius: 20px;
+  border-color: #d5d0c7;
+  box-shadow: var(--mn-shadow);
+  background: #ffffff;
+}
+
+.mn-theme .border-l-purple,
+.admin-theme .border-l-purple {
+  border-left-color: #c8973a !important;
+}
+
+.mn-theme .border-l-teal,
+.seller-theme .border-l-teal {
+  border-left-color: #1a6b5a !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-reveal,
+  .shop-reveal {
+    animation: none;
+  }
+}

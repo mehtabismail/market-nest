@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --purple: #c8973a;
+  --teal: #1a6b5a;
+  --blue: #1a6b5a;
+  --bg: #f5f3ee;
+  --gray-dark: #0e0f11;
+  --border: #d5d0c7;
+}
+
+body {
+  @apply bg-mn-paper text-mn-ink font-sans antialiased;
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.35s ease-out both;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out both;
+  }
+  .skeleton {
+    @apply relative overflow-hidden bg-mn-cream;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shop-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-mn-ink text-mn-paper hover:bg-mn-accent shadow-sm;
+  }
+  .btn-teal {
+    @apply bg-mn-ink text-mn-paper hover:bg-mn-accent shadow-sm;
+  }
+  .btn-purple {
+    @apply bg-mn-ink text-mn-paper hover:bg-mn-accent shadow-sm;
+  }
+  .btn-blue {
+    @apply bg-mn-ink text-mn-paper hover:bg-mn-accent shadow-sm;
+  }
+  .btn-outline {
+    @apply border border-mn-border bg-white hover:bg-mn-cream shadow-sm rounded-full;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .card {
+    @apply rounded-[20px] border border-mn-border bg-white shadow-sm transition-shadow duration-200 hover:shadow-md;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+  .badge-official {
+    @apply bg-mn-teal-soft text-mn-teal;
+  }
+  .input {
+    @apply w-full rounded-xl border border-mn-border bg-white px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 focus:border-mn-teal focus:ring-2 focus:ring-mn-teal/15;
+  }
+  .stat {
+    @apply card p-5;
+  }
+  .price {
+    @apply font-outfit tabular-nums tracking-tight font-bold text-mn-teal;
+  }
+  .price-lg {
+    @apply text-xl font-outfit tabular-nums tracking-tight font-extrabold text-mn-teal;
+  }
+  .stat-value {
+    @apply text-2xl font-outfit tabular-nums tracking-tight font-bold text-mn-ink;
+  }
+  .brand-text {
+    @apply font-outfit font-extrabold tracking-tight text-mn-ink;
+  }
+}

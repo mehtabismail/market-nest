@@ -1,0 +1,23 @@
+import type { BuyerProductListItemDTO } from './buyer-product';
+
+export interface CartItemInput {
+  productId: string;
+  variantId?: string | null;
+  quantity: number;
+}
+
+export interface CartLineDTO {
+  productId: string;
+  variantId: string | null;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  product: BuyerProductListItemDTO;
+}
+
+export interface CartDTO {
+  id: string;
+  items: CartLineDTO[];
+  subtotal: number;
+  itemCount: number;
+}

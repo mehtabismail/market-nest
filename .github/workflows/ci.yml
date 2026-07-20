@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build --workspace=@marketnest/shared-types
+      - run: npm run build --workspace=@marketnest/utils
+
+      - run: npm run typecheck --workspace=@marketnest/api --if-present
+      - run: npm run build --workspace=@marketnest/api
+
+      - run: npm run typecheck --workspace=@marketnest/web --if-present
+      - run: npm run build --workspace=@marketnest/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          NEXT_PUBLIC_API_URL: http://localhost:3001

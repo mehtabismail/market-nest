@@ -1,0 +1,158 @@
+/* Buyer shop ù matches landing page palette */
+
+.shop-theme {
+  --shop-shadow: 0 2px 24px rgba(14, 15, 17, 0.08);
+  --shop-shadow-lg: 0 8px 48px rgba(14, 15, 17, 0.12);
+  background-color: #f5f3ee;
+  color: #0e0f11;
+  min-height: 100vh;
+}
+
+.shop-theme .shop-section-title {
+  font-family: var(--font-outfit), 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #0e0f11;
+}
+
+.shop-theme .shop-card {
+  border: 1px solid #d5d0c7;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--shop-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.shop-theme .shop-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shop-shadow-lg);
+}
+
+.shop-theme .shop-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background: #0e0f11;
+  color: #f5f3ee;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.shop-theme .shop-btn-primary:hover {
+  background: #e8472a;
+  transform: translateY(-1px);
+}
+
+.shop-theme .shop-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  border: 1.5px solid #d5d0c7;
+  background: transparent;
+  color: #0e0f11;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.shop-theme .shop-btn-secondary:hover {
+  border-color: #0e0f11;
+  transform: translateY(-1px);
+}
+
+.shop-theme .shop-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid #d5d0c7;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b6860;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.shop-theme .shop-chip:hover {
+  border-color: #1a6b5a;
+  color: #1a6b5a;
+  background: #e0f0eb;
+}
+
+.shop-theme .shop-chip-active {
+  border-color: #1a6b5a;
+  color: #1a6b5a;
+  background: #e0f0eb;
+}
+
+.shop-theme .shop-reveal {
+  animation: shop-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Sub-pages (cart, checkout, orders) inherit landing palette */
+.shop-theme .card {
+  border-color: #d5d0c7;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--shop-shadow);
+}
+
+.shop-theme .btn-blue,
+.shop-theme .btn-primary {
+  background: #0e0f11 !important;
+  color: #f5f3ee !important;
+  border-radius: 9999px;
+}
+
+.shop-theme .btn-blue:hover,
+.shop-theme .btn-primary:hover {
+  background: #e8472a !important;
+}
+
+.shop-theme .btn-outline {
+  border-color: #d5d0c7 !important;
+  border-radius: 9999px;
+  color: #0e0f11 !important;
+}
+
+.shop-theme .text-blue,
+.shop-theme .hover\:text-blue:hover {
+  color: #1a6b5a !important;
+}
+
+.shop-theme .bg-blue-light {
+  background-color: #e0f0eb !important;
+}
+
+.shop-theme .text-gray-dark {
+  color: #0e0f11;
+}
+
+.shop-theme .text-gray {
+  color: #6b6860;
+}
+
+.shop-theme .border-border {
+  border-color: #d5d0c7;
+}
+
+.shop-theme .input:focus {
+  border-color: #1a6b5a !important;
+  --tw-ring-color: rgb(26 107 90 / 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-theme .shop-card:hover {
+    transform: none;
+  }
+  .shop-theme .shop-reveal {
+    animation: none;
+  }
+}
