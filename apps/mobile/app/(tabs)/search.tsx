@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { BuyerProductListItemDTO } from '@marketnest/shared-types';
+import { FadeInItem } from '../../src/components/fade-in';
 import { ProductCard } from '../../src/components/product-card';
-import { EmptyState, ErrorState, LoadingState } from '../../src/components/states';
+import { ProductGridSkeleton } from '../../src/components/skeleton';
+import { EmptyState, ErrorState } from '../../src/components/states';
 import { useApi } from '../../src/hooks/use-api';
 import { colors, fontSize, radii, spacing } from '../../src/theme';
 
@@ -41,7 +43,7 @@ export default function SearchScreen() {
       {!query ? (
         <EmptyState title="Search the catalogue" message="Type what you are looking for above." />
       ) : loading ? (
-        <LoadingState label="Searching…" />
+        <ProductGridSkeleton count={4} />
       ) : error ? (
         <ErrorState message={error} onRetry={reload} />
       ) : (data?.items.length ?? 0) === 0 ? (
@@ -54,9 +56,12 @@ export default function SearchScreen() {
           contentContainerStyle={styles.list}
           columnWrapperStyle={styles.row}
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
             <View style={styles.cell}>
-              <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
+              <FadeInItem index={index}>
+                <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
+              </FadeInItem>
             </View>
           )}
         />
@@ -78,7 +83,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontSize: fontSize.base,
   },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.lg },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: 96, gap: spacing.lg },
   row: { gap: spacing.lg },
   cell: { flex: 1, maxWidth: '50%' },
 });

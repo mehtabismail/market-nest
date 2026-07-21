@@ -103,8 +103,8 @@ export const elevation = {
 } as const;
 
 /**
- * Motion durations in ms. Exit is faster than enter — the user is already on
- * their way somewhere else.
+ * Motion durations in ms. Exit is faster than enter — roughly 70% — because the
+ * user is already on their way somewhere else and waiting on the exit.
  */
 export const duration = {
   micro: 150,
@@ -112,6 +112,33 @@ export const duration = {
   exit: 180,
   page: 350,
 } as const;
+
+/**
+ * Spring presets. Physics-based curves feel native on iOS in a way that fixed
+ * cubic-beziers do not, and they stay interruptible — a second tap mid-animation
+ * redirects rather than queueing.
+ */
+export const spring = {
+  /** Press feedback. Tight and quick, no visible overshoot. */
+  press: { damping: 18, stiffness: 320, mass: 0.6 },
+  /** Entrances. A little softer, barely-there settle. */
+  entrance: { damping: 20, stiffness: 180, mass: 0.9 },
+  /** Sheets and large surfaces. Weightier. */
+  surface: { damping: 24, stiffness: 140, mass: 1 },
+} as const;
+
+/**
+ * Per-item delay for list and grid entrances. Below ~30ms the stagger is
+ * invisible; above ~50ms the last item feels late.
+ */
+export const stagger = {
+  item: 40,
+  /** Cap the cascade so row 12 does not animate a second after row 1. */
+  maxItems: 8,
+} as const;
+
+/** Press scale. Perceptible without the layout appearing to move. */
+export const pressScale = 0.97;
 
 export type ColorToken = keyof typeof colors;
 export type RadiusToken = keyof typeof radii;

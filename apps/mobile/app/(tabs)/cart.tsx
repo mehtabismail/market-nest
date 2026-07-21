@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useFocusEffect, useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { ApiError } from '@marketnest/api-client';
 import type { CartDTO } from '@marketnest/shared-types';
-import { EmptyState, ErrorState, LoadingState } from '../../src/components/states';
+import { FadeInItem } from '../../src/components/fade-in';
+import { GlassSurface } from '../../src/components/glass';
+import { PressableScale } from '../../src/components/pressable-scale';
+import { Skeleton } from '../../src/components/skeleton';
+import { EmptyState, ErrorState } from '../../src/components/states';
 import { api } from '../../src/lib/api';
-import { colors, fontSize, formatPrice, radii, shadow, spacing } from '../../src/theme';
+import { colors, duration, fontSize, formatPrice, radii, shadow, spacing } from '../../src/theme';
 
 export default function CartScreen() {
   const router = useRouter();
@@ -14,10 +20,8 @@ export default function CartScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
     setError(null);
     try {
-      // Guests need a server-issued session before they can hold a cart.
       await api.ensureGuestSession();
       setCart(await api.request<CartDTO>('/cart'));
     } catch (err) {
@@ -38,13 +42,30 @@ export default function CartScreen() {
     }, [load]),
   );
 
-  if (loading && !cart) return <LoadingState label="Loading your cart…" />;
+  if (loading && !cart) {
+    return (
+      <View style={styles.loadingList}>
+        {[0, 1, 2].map((i) => (
+          <View key={i} style={styles.line}>
+            <Skeleton style={styles.thumb} />
+            <View style={styles.lineBody}>
+              <Skeleton style={{ height: 13, width: '80%' }} />
+              <Skeleton style={{ height: 11, width: '40%' }} />
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
   if (error) return <ErrorState message={error} onRetry={load} />;
 
   const items = cart?.items ?? [];
 
   if (items.length === 0) {
-    return <EmptyState title="Your cart is empty" message="Browse the shop to add something." />;
+    return (
+      <EmptyState title="Your cart is empty" message="Browse the shop to add something." />
+    );
   }
 
   return (
@@ -53,42 +74,63 @@ export default function CartScreen() {
         data={items}
         keyExtractor={(item) => `${item.productId}:${item.variantId ?? 'default'}`}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={[styles.line, shadow('sm')]}>
-            {item.product.thumbnail ? (
-              <Image source={{ uri: item.product.thumbnail }} style={styles.thumb} />
-            ) : (
-              <View style={[styles.thumb, styles.thumbFallback]} />
-            )}
-            <View style={styles.lineBody}>
-              <Text style={styles.lineTitle} numberOfLines={2}>
-                {item.product.title}
-              </Text>
-              <Text style={styles.muted}>
-                {formatPrice(item.unitPrice)} × {item.quantity}
-              </Text>
-            </View>
-            <Text style={styles.lineTotal}>{formatPrice(item.lineTotal)}</Text>
-          </View>
+        showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
+        renderItem={({ item, index }) => (
+          <FadeInItem index={index}>
+            <PressableScale
+              style={[styles.line, shadow('sm')]}
+              onPress={() => router.push(`/product/${item.productId}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.product.title}, quantity ${item.quantity}`}
+            >
+              <Image
+                source={item.product.thumbnail}
+                style={styles.thumb}
+                contentFit="cover"
+                transition={duration.enter}
+              />
+              <View style={styles.lineBody}>
+                <Text style={styles.lineTitle} numberOfLines={2}>
+                  {item.product.title}
+                </Text>
+                <Text style={styles.muted}>
+                  {formatPrice(item.unitPrice)} × {item.quantity}
+                </Text>
+              </View>
+              <Text style={styles.lineTotal}>{formatPrice(item.lineTotal)}</Text>
+            </PressableScale>
+          </FadeInItem>
         )}
       />
 
-      <View style={styles.footer}>
+      {/* Glass here is purposeful: the summary floats over the list so the
+          subtotal and CTA stay visible while scrolling. */}
+      <GlassSurface style={styles.footer} fallbackColor={colors.white}>
         <View style={styles.summaryRow}>
-          <Text style={styles.muted}>Subtotal</Text>
+          <Text style={styles.muted}>
+            Subtotal · {cart?.itemCount} {cart?.itemCount === 1 ? 'item' : 'items'}
+          </Text>
           <Text style={styles.subtotal}>{formatPrice(cart?.subtotal ?? 0)}</Text>
         </View>
-        <Pressable style={styles.checkout} onPress={() => router.push('/checkout')}>
+        <PressableScale
+          style={styles.checkout}
+          onPress={() => router.push('/checkout')}
+          accessibilityRole="button"
+          accessibilityLabel="Proceed to checkout"
+        >
           <Text style={styles.checkoutLabel}>Checkout</Text>
-        </Pressable>
-      </View>
+          <Ionicons name="arrow-forward" size={17} color={colors.white} />
+        </PressableScale>
+      </GlassSurface>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  list: { padding: spacing.lg, gap: spacing.md },
+  loadingList: { padding: spacing.lg, gap: spacing.md },
+  list: { padding: spacing.lg, paddingBottom: 210, gap: spacing.md },
   line: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -99,26 +141,31 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
   },
-  thumb: { width: 56, height: 56, borderRadius: radii.md, backgroundColor: colors.cream },
-  thumbFallback: { backgroundColor: colors.cream },
-  lineBody: { flex: 1, gap: 2 },
+  thumb: { width: 58, height: 58, borderRadius: radii.md, backgroundColor: colors.cream },
+  lineBody: { flex: 1, gap: 3 },
   lineTitle: { fontSize: fontSize.sm, fontWeight: '600', color: colors.ink },
   muted: { fontSize: fontSize.xs, color: colors.mid },
   lineTotal: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
   footer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.white,
-    padding: spacing.lg,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: spacing.lg,
+    paddingBottom: 110,
+    paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   subtotal: { fontSize: fontSize.xl, fontWeight: '700', color: colors.ink },
   checkout: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     backgroundColor: colors.ink,
     borderRadius: radii.full,
     paddingVertical: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   checkoutLabel: { color: colors.white, fontWeight: '700', fontSize: fontSize.base },
 });
