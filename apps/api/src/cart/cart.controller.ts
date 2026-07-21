@@ -13,13 +13,17 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 const GUEST_COOKIE = 'mn_guest';
 
+// NOTE: @Public() is applied per-method, never at class level. A class-level
+// @Public() is inherited by every handler and silently disables JwtAuthGuard on
+// routes that declare it (getAllAndOverride falls through to the class), which
+// made POST /cart/merge unauthenticated.
 @ApiTags('cart')
-@Public()
 @UseGuards(OptionalJwtGuard)
 @Controller('cart')
 export class CartController {
   constructor(private readonly cart: CartService) {}
 
+  @Public()
   @Post('guest-session')
   createGuestSession(@Res({ passthrough: true }) res: Response) {
     const { sessionId } = this.cart.createGuestSession();
@@ -32,12 +36,14 @@ export class CartController {
     return { sessionId };
   }
 
+  @Public()
   @ApiHeader({ name: 'x-guest-session', required: false })
   @Get()
   getCart(@GuestSession() guest: string | undefined, @CurrentUser() user?: RequestUser) {
     return this.cart.getCart(guest, user?.id);
   }
 
+  @Public()
   @ApiHeader({ name: 'x-guest-session', required: false })
   @Post('items')
   addItem(
@@ -48,6 +54,7 @@ export class CartController {
     return this.cart.addItem(dto, guest, user?.id);
   }
 
+  @Public()
   @ApiHeader({ name: 'x-guest-session', required: false })
   @Patch('items')
   updateItem(
@@ -64,6 +71,7 @@ export class CartController {
     );
   }
 
+  @Public()
   @ApiHeader({ name: 'x-guest-session', required: false })
   @Delete('items/:productId')
   removeItem(
