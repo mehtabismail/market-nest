@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiFetch, UNAUTHORIZED_EVENT } from '@/lib/api';
+import { apiFetch, mergeGuestCartIfPresent, UNAUTHORIZED_EVENT } from '@/lib/api';
 
 export type UserRole = 'buyer' | 'seller' | 'superadmin';
 
@@ -59,6 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await apiFetch<AuthUser>('/auth/me', { token: stored });
       setToken(stored);
       setUser(me);
+      // Recover a cart left behind in the guest namespace.
+      await mergeGuestCartIfPresent(stored);
+      window.dispatchEvent(new Event('cart-updated'));
     } catch {
       localStorage.removeItem('mn_token');
       setToken(null);

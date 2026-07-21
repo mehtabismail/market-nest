@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { CartDTO, CartItemInput, CartLineDTO } from '@marketnest/shared-types';
 import { RedisService } from '../redis/redis.service';
@@ -32,7 +37,14 @@ export class CartService {
 
   private async loadRaw(key: string): Promise<StoredCart> {
     const client = this.redis.getClient();
-    if (!client) return { items: [] };
+    // Returning an empty cart when the store is unreachable is indistinguishable
+    // from a genuinely empty cart, which surfaces to the buyer as "Cart is
+    // empty" at checkout. Fail loudly instead.
+    if (!client) {
+      throw new ServiceUnavailableException(
+        'Cart storage unavailable — configure REDIS_URL',
+      );
+    }
     const raw = await client.get(key);
     if (!raw) return { items: [] };
     return JSON.parse(raw) as StoredCart;
@@ -40,7 +52,11 @@ export class CartService {
 
   private async saveRaw(key: string, cart: StoredCart) {
     const client = this.redis.getClient();
-    if (!client) throw new BadRequestException('Cart storage unavailable � configure REDIS_URL');
+    if (!client) {
+      throw new ServiceUnavailableException(
+        'Cart storage unavailable — configure REDIS_URL',
+      );
+    }
     await client.setex(key, CART_TTL_SEC, JSON.stringify(cart));
   }
 

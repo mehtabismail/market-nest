@@ -63,7 +63,10 @@ export class NotificationsService {
     if (!order?.buyerEmail) return false;
 
     const itemsHtml = order.items
-      .map((i) => `<li>${i.title} � ${i.quantity} � $${i.lineTotal.toFixed(2)}</li>`)
+      .map(
+        (i) =>
+          `<li>${i.title} &times; ${i.quantity} &mdash; $${i.lineTotal.toFixed(2)}</li>`,
+      )
       .join('');
 
     return this.email.send({
@@ -75,7 +78,7 @@ export class NotificationsService {
           <p>Order <strong>#${orderId.slice(0, 8)}</strong></p>
           <ul>${itemsHtml}</ul>
           <p><strong>Total: $${order.total.toFixed(2)}</strong></p>
-          <p style="color:#5F5E5A;font-size:12px">MarketNest � your order is being processed. No seller information is included per our buyer protection policy.</p>
+          <p style="color:#5F5E5A;font-size:12px">MarketNest &mdash; your order is being processed. No seller information is included per our buyer protection policy.</p>
         </div>
       `,
       text: `Order confirmed #${orderId.slice(0, 8)}. Total $${order.total.toFixed(2)}`,
@@ -112,7 +115,7 @@ export class NotificationsService {
     await this.email.send({
       to: order.buyerEmail,
       subject: `Your MarketNest order has shipped`,
-      html: `<p>Order #${orderId.slice(0, 8)} is on its way.</p><p>Tracking: <strong>${tracking}</strong> (${courier})</p><p>� MarketNest</p>`,
+      html: `<p>Order #${orderId.slice(0, 8)} is on its way.</p><p>Tracking: <strong>${tracking}</strong> (${courier})</p><p>&mdash; MarketNest</p>`,
     });
 
     if (order.buyerPhone) {

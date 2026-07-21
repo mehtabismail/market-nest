@@ -59,6 +59,20 @@ export function getGuestSession(): string | null {
   return localStorage.getItem('mn_guest_session');
 }
 
+/**
+ * The session token, attached to every request unless a caller passes its own.
+ *
+ * This must not be opt-in. The API resolves a cart key as "user id if present,
+ * otherwise guest session", so a cart request sent without the token silently
+ * targets the guest cart while checkout — which did send one — reads the user
+ * cart. That mismatch made every checkout fail with "Cart is empty". Attaching
+ * the token centrally makes the whole class of bug impossible.
+ */
+function getStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('mn_token');
+}
+
 export function setGuestSession(sessionId: string) {
   localStorage.setItem('mn_guest_session', sessionId);
 }
@@ -68,6 +82,7 @@ export async function apiFetch<T>(
   options?: RequestInit & { token?: string },
 ): Promise<T> {
   const { token, ...init } = options ?? {};
+  const authToken = token ?? getStoredToken();
   const guest = getGuestSession();
   const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
 
@@ -79,7 +94,7 @@ export async function apiFetch<T>(
       headers: {
         ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(guest ? { 'x-guest-session': guest } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...init.headers,
       },
     });
@@ -110,4 +125,22 @@ export async function ensureGuestSession() {
     method: 'POST',
   });
   setGuestSession(data.sessionId);
+}
+
+/**
+ * Folds a lingering guest cart into the signed-in user's cart.
+ *
+ * Merge used to run only on the login screen, so a cart stranded in the guest
+ * namespace — by a failed merge, or by adding items before signing in — stayed
+ * invisible to checkout forever. Running it whenever a session is restored lets
+ * those carts recover on the next page load. No-ops without a guest session.
+ */
+export async function mergeGuestCartIfPresent(token: string): Promise<void> {
+  if (!getGuestSession()) return;
+  try {
+    await apiFetch('/cart/merge', { method: 'POST', token });
+    localStorage.removeItem('mn_guest_session');
+  } catch {
+    // Never block sign-in on a cart merge; it retries on the next load.
+  }
 }

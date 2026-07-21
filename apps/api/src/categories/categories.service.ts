@@ -48,7 +48,7 @@ export class CategoriesService {
       where: { categoryId: id, status: { not: 'archived' } },
     });
     if (productCount > 0) {
-      throw new NotFoundException('Category has active products � reassign first');
+      throw new NotFoundException('Category has active products — reassign first');
     }
     const row = await this.prisma.category.update({
       where: { id },

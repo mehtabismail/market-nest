@@ -27,7 +27,7 @@ export class AssistantService {
     const productContext = products
       .map(
         (p, i) =>
-          `${i + 1}. ${p.title} � $${p.price.toFixed(2)}${p.isMarketNestOfficial ? ' (MarketNest Official)' : ''}`,
+          `${i + 1}. ${p.title} — $${p.price.toFixed(2)}${p.isMarketNestOfficial ? ' (MarketNest Official)' : ''}`,
       )
       .join('\n');
 
