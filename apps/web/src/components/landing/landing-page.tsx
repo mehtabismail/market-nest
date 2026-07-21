@@ -72,7 +72,7 @@ export function LandingPage() {
         <div className="hero-content">
           <div className="hero-badge">
             <span className="hero-badge-dot"></span>
-            Now live — Pakistan's smartest marketplace
+            Now live — Pakistan&rsquo;s smartest marketplace
           </div>
           <h1>
             Buy Smart.<br />
@@ -133,7 +133,7 @@ export function LandingPage() {
         <div style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto 3rem' }}>
           <p className="section-label">Platform Overview</p>
           <h2 className="section-title">Built for everyone.<br />Optimised for you.</h2>
-          <p className="section-sub">Whether you're looking to find the perfect product or grow a thriving online store, MarketNest gives you everything you need in one place.</p>
+          <p className="section-sub">Whether you&rsquo;re looking to find the perfect product or grow a thriving online store, MarketNest gives you everything you need in one place.</p>
         </div>
         <div className="features-grid" id="sellers">
           
@@ -155,7 +155,7 @@ export function LandingPage() {
                 <div className="fi-icon buyer-icon">🤖</div>
                 <div className="fi-text">
                   <div className="fi-title">AI-Powered Search</div>
-                  <div className="fi-desc">Type exactly what you want in plain language. Find "blue summer dress" even if it's listed as "azure frock".</div>
+                  <div className="fi-desc">Type exactly what you want in plain language. Find &ldquo;blue summer dress&rdquo; even if it&rsquo;s listed as &ldquo;azure frock&rdquo;.</div>
                 </div>
               </li>
               <li className="feature-item buyer-feature reveal reveal-delay-3">
@@ -319,7 +319,7 @@ export function LandingPage() {
                 <div className="ai-feat-icon">🧠</div>
                 <div>
                   <div className="ai-feat-title">Semantic Search</div>
-                  <div className="ai-feat-desc">Understands meaning, not just keywords. Find "lightweight summer top" even when the listing says "breathable cotton blouse".</div>
+                  <div className="ai-feat-desc">Understands meaning, not just keywords. Find &ldquo;lightweight summer top&rdquo; even when the listing says &ldquo;breathable cotton blouse&rdquo;.</div>
                 </div>
               </div>
               <div className="ai-feat reveal">
@@ -343,7 +343,7 @@ export function LandingPage() {
             <div className="chat-window">
               <div className="chat-msg chat-user">I need a gift under Rs 5,000 for my mum who loves gardening 🌿</div>
               <div className="chat-ai">
-                <div style={{ marginBottom: '10px' }}>I found some lovely options she'd adore! Here are my top picks:</div>
+                <div style={{ marginBottom: '10px' }}>I found some lovely options she&rsquo;d adore! Here are my top picks:</div>
                 <div className="chat-products">
                   <div className="chat-product">
                     <div className="chat-product-emoji">🌱</div>
@@ -389,7 +389,7 @@ export function LandingPage() {
             <div className="payment-card reveal reveal-delay-1">
               <div className="payment-card-icon">💳</div>
               <div className="payment-card-title">Online Card Payment</div>
-              <div className="payment-card-desc">Powered by Stripe — the world's most trusted payment infrastructure. Enter your card details directly on-page with no redirect. Apple Pay and Google Pay supported on compatible devices.</div>
+              <div className="payment-card-desc">Powered by Stripe — the world&rsquo;s most trusted payment infrastructure. Enter your card details directly on-page with no redirect. Apple Pay and Google Pay supported on compatible devices.</div>
               <div className="payment-highlights">
                 <span className="ph-tag">Stripe Secured</span>
                 <span className="ph-tag">Apple Pay</span>
@@ -476,7 +476,7 @@ export function LandingPage() {
           </div>
           <div className="scta-content reveal reveal-delay-1">
             <p className="section-label">Become a Seller</p>
-            <h2 className="section-title">Your store on Pakistan's most capable platform</h2>
+            <h2 className="section-title">Your store on Pakistan&rsquo;s most capable platform</h2>
             <p className="section-sub" style={{ maxWidth: '100%' }}>MarketNest gives you a complete toolkit to sell online — without the complexity. From your first listing to your hundredth order, we handle the infrastructure so you can focus on your products.</p>
             <ul className="scta-points">
               <li className="scta-point">

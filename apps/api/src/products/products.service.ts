@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ProductOwnerType, ProductStatus, Prisma } from '@prisma/client';
-import type { BuyerProductDTO, BuyerProductListItemDTO } from '@marketnest/shared-types';
+import type { BuyerProductDTO } from '@marketnest/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RequestUser } from '../auth/auth.types';
 import { toBuyerProductDTO, toBuyerProductListItemDTO } from './buyer-product.mapper';
