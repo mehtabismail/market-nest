@@ -12,9 +12,13 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { PaymentsService } from '../payments/payments.service';
 import { RateLimit } from '../rate-limit/rate-limit.decorator';
 
+// Buyer-only by design. Admins read orders through /admin/orders and
+// /admin/fulfilment; letting them transact here would break separation of
+// duties (place order -> approve -> trigger payout) and would put internal
+// test orders into GMV and revenue analytics.
 @ApiTags('orders')
 @ApiBearerAuth()
-@Roles('buyer', 'superadmin')
+@Roles('buyer')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrdersController {
