@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@marketnest/api-client": "*",
     "@marketnest/shared-types": "*",
-    "@marketnest/ui": "*",
     "@marketnest/utils": "*",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.7.0",

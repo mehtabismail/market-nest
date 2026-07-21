@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "MarketNest",
+    "slug": "marketnest",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "marketnest",
+    "backgroundColor": "#f5f3ee",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.marketnest.app"
+    },
+    "android": {
+      "package": "com.marketnest.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#f5f3ee",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-status-bar", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "http://localhost:3001"
+    }
+  }
+}

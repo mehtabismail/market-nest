@@ -19,8 +19,11 @@ jobs:
 
       - run: npm ci
 
+      # Shared packages first — apps consume their compiled dist/.
       - run: npm run build --workspace=@marketnest/shared-types
       - run: npm run build --workspace=@marketnest/utils
+      - run: npm run build --workspace=@marketnest/tokens
+      - run: npm run build --workspace=@marketnest/api-client
 
       - run: npm run lint --workspace=@marketnest/api
       - run: npm run typecheck --workspace=@marketnest/api --if-present
@@ -34,3 +37,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           NEXT_PUBLIC_API_URL: http://localhost:3001
+
+      # Mobile has no build step in CI — native builds run on EAS. Typecheck is
+      # what catches a shared-package contract change breaking the app.
+      - run: npm run typecheck --workspace=@marketnest/mobile
