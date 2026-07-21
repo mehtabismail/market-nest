@@ -7,14 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
-} from '@nestjs/common';
+  } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import type { RequestUser } from '../auth/auth.types';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -44,7 +41,6 @@ export class ProductsController {
 @ApiTags('seller-products')
 @ApiBearerAuth()
 @Roles('seller')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('seller/products')
 export class SellerProductsController {
   constructor(private readonly products: ProductsService) {}

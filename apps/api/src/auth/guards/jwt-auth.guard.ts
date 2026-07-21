@@ -11,19 +11,7 @@ import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 import { SupabaseService } from '../supabase.service';
 import type { RequestUser } from '../auth.types';
 import { PrismaService } from '../../prisma/prisma.service';
-import { RedisService } from '../../redis/redis.service';
-
-const PROFILE_CACHE_TTL = 300;
-const PROFILE_CACHE_PREFIX = 'profile:';
-
-interface CachedProfile {
-  id: string;
-  email: string;
-  role: string;
-  sellerId?: string;
-  sellerActive?: boolean;
-  sellerStatus?: string;
-}
+import { ProfileCacheService, type CachedProfile } from '../profile-cache.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -33,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly supabase: SupabaseService,
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
+    private readonly profileCache: ProfileCacheService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -65,7 +53,7 @@ export class JwtAuthGuard implements CanActivate {
     const userId = data.user.id;
     const userEmail = data.user.email ?? '';
 
-    const cached = await this.getCachedProfile(userId);
+    const cached = await this.profileCache.get(userId);
     if (cached) {
       this.validateSellerStatus(cached);
       request.user = {
@@ -95,7 +83,7 @@ export class JwtAuthGuard implements CanActivate {
       sellerStatus: profile.seller?.status,
     };
 
-    await this.setCachedProfile(userId, cachedData);
+    await this.profileCache.set(userId, cachedData);
 
     this.validateSellerStatus(cachedData);
 
@@ -118,36 +106,6 @@ export class JwtAuthGuard implements CanActivate {
       throw new ForbiddenException(
         'Seller account is suspended or inactive. Please contact support.',
       );
-    }
-  }
-
-  private async getCachedProfile(userId: string): Promise<CachedProfile | null> {
-    const client = this.redis.getClient();
-    if (!client) return null;
-
-    try {
-      const cached = await client.get(`${PROFILE_CACHE_PREFIX}${userId}`);
-      if (cached) {
-        return JSON.parse(cached) as CachedProfile;
-      }
-    } catch (err) {
-      this.logger.warn(`Redis profile cache read failed: ${err}`);
-    }
-    return null;
-  }
-
-  private async setCachedProfile(userId: string, profile: CachedProfile): Promise<void> {
-    const client = this.redis.getClient();
-    if (!client) return;
-
-    try {
-      await client.setex(
-        `${PROFILE_CACHE_PREFIX}${userId}`,
-        PROFILE_CACHE_TTL,
-        JSON.stringify(profile),
-      );
-    } catch (err) {
-      this.logger.warn(`Redis profile cache write failed: ${err}`);
     }
   }
 }

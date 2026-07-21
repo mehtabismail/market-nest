@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsOptional,
   IsString,
   MinLength,
   ValidateNested,
@@ -20,6 +21,9 @@ class ShippingAddressDto {
   @IsString()
   line1!: string;
 
+  // Optional in TypeScript AND at runtime. Without @IsOptional() the validator
+  // required it despite the `?`, so any client that omitted line2 got a 400.
+  @IsOptional()
   @IsString()
   line2?: string;
 

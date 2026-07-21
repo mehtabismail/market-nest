@@ -1,10 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { GuestSession } from '../common/decorators/guest-session.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import type { RequestUser } from '../auth/auth.types';
 import { OrdersService } from './orders.service';
 import { CheckoutBodyDto } from './dto/checkout.dto';
@@ -19,7 +17,6 @@ import { RateLimit } from '../rate-limit/rate-limit.decorator';
 @ApiTags('orders')
 @ApiBearerAuth()
 @Roles('buyer')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrdersController {
   constructor(
@@ -62,7 +59,6 @@ export class OrdersController {
 @ApiTags('seller-orders')
 @ApiBearerAuth()
 @Roles('seller')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('seller/orders')
 export class SellerOrdersController {
   constructor(private readonly orders: OrdersService) {}

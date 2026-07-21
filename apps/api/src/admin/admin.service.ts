@@ -8,6 +8,7 @@ import { Prisma, UserRole } from '@prisma/client';
 import { slugify } from '@marketnest/utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseService } from '../auth/supabase.service';
+import { ProfileCacheService } from '../auth/profile-cache.service';
 import { AuditService } from '../audit/audit.service';
 import { ProductsService } from '../products/products.service';
 import { CreateProductDto } from '../products/dto/create-product.dto';
@@ -25,6 +26,7 @@ export class AdminService {
     private readonly products: ProductsService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationsService,
+    private readonly profileCache: ProfileCacheService,
   ) {}
 
   async listSellers(page = 1, limit = 20) {
@@ -180,6 +182,9 @@ export class AdminService {
       where: { sellerId: id },
       data: { status: 'archived' },
     });
+    // JwtAuthGuard checks suspension against the cached profile, so without
+    // this the seller keeps trading until the TTL expires.
+    await this.profileCache.invalidate(seller.userId);
     await this.audit.log({
       actorId: actorId ?? null,
       action: 'seller.suspend',
@@ -197,17 +202,21 @@ export class AdminService {
   }
 
   async reactivateSeller(id: string, actorId?: string) {
-    await this.getSeller(id);
+    const seller = await this.getSeller(id);
     await this.audit.log({
       actorId: actorId ?? null,
       action: 'seller.reactivate',
       entityType: 'seller',
       entityId: id,
     });
-    return this.prisma.seller.update({
+    const updated = await this.prisma.seller.update({
       where: { id },
       data: { isActive: true, status: 'active' },
     });
+    // Without this the cached profile still says suspended, so a reinstated
+    // seller stays locked out until the TTL expires.
+    await this.profileCache.invalidate(seller.userId);
+    return updated;
   }
 
   listProducts(query: ListProductsQuery) {
@@ -234,7 +243,7 @@ export class AdminService {
   }
 
   async deleteSeller(id: string, actorId?: string) {
-    await this.getSeller(id);
+    const seller = await this.getSeller(id);
     await this.prisma.$transaction(async (tx) => {
       await tx.seller.update({
         where: { id },
@@ -245,6 +254,7 @@ export class AdminService {
         data: { status: 'archived' },
       });
     });
+    await this.profileCache.invalidate(seller.userId);
     await this.audit.log({
       actorId: actorId ?? null,
       action: 'seller.delete',

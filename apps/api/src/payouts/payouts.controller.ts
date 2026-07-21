@@ -1,16 +1,13 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import type { RequestUser } from '../auth/auth.types';
 import { PayoutsService } from './payouts.service';
 
 @ApiTags('seller-payouts')
 @ApiBearerAuth()
 @Roles('seller')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('seller')
 export class SellerPayoutsController {
   constructor(private readonly payouts: PayoutsService) {}
@@ -29,7 +26,6 @@ export class SellerPayoutsController {
 @ApiTags('admin-payouts')
 @ApiBearerAuth()
 @Roles('superadmin')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('admin/payouts')
 export class AdminPayoutsController {
   constructor(private readonly payouts: PayoutsService) {}

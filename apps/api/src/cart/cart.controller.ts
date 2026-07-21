@@ -5,7 +5,6 @@ import { Public } from '../common/decorators/public.decorator';
 import { GuestSession } from '../common/decorators/guest-session.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { OptionalJwtGuard } from '../common/guards/optional-jwt.guard';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { RequestUser } from '../auth/auth.types';
 import { CartService } from './cart.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
@@ -83,7 +82,6 @@ export class CartController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @Post('merge')
   async merge(
     @GuestSession() guest: string | undefined,

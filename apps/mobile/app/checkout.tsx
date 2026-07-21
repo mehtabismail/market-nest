@@ -76,9 +76,6 @@ export default function CheckoutScreen() {
       const order = await api.request<OrderDetailDTO>('/orders/checkout', {
         method: 'POST',
         body: JSON.stringify({
-          // line2 is sent even when blank: the API DTO marks it optional in
-          // TypeScript but validates it with @IsString() and no @IsOptional(),
-          // so omitting it fails validation.
           shippingAddress: address,
           paymentMethod: 'cod',
         }),
