@@ -173,6 +173,21 @@ export class OrdersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      // Claim the cancellation before restocking. The status check above runs
+      // outside this transaction, so two concurrent cancels (a double-click, a
+      // client retry) would both pass it and both increment stock, inflating
+      // inventory. Gating on the pending statuses lets exactly one through.
+      const { count } = await tx.order.updateMany({
+        where: { id: order.id, status: { in: ['pending_cod', 'pending_payment'] } },
+        data: { status: 'cancelled' },
+      });
+
+      if (count === 0) {
+        throw new BadRequestException(
+          'Only pending COD or pending payment orders can be cancelled',
+        );
+      }
+
       for (const item of order.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -182,11 +197,6 @@ export class OrdersService {
 
       await tx.orderItem.updateMany({
         where: { orderId: order.id },
-        data: { status: 'cancelled' },
-      });
-
-      await tx.order.update({
-        where: { id: order.id },
         data: { status: 'cancelled' },
       });
     });

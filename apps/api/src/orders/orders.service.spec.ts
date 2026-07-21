@@ -16,7 +16,7 @@ const CHECKOUT_DTO = {
 function buildHarness() {
   const tx = {
     order: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
-    product: { findFirst: jest.fn(), updateMany: jest.fn() },
+    product: { findFirst: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     orderItem: { create: jest.fn(), updateMany: jest.fn() },
     payment: { updateMany: jest.fn() },
   };
@@ -83,6 +83,26 @@ describe('OrdersService checkout stock claim', () => {
       BadRequestException,
     );
     expect(tx.orderItem.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('OrdersService.cancelBuyerOrder restock claim', () => {
+  // Mirror image of the oversell race: the pre-transaction status check lets two
+  // concurrent cancels through, and both restock, inflating inventory.
+  it('does not restock when the cancellation claim matches no row', async () => {
+    const { service, prisma, tx } = buildHarness();
+    (prisma as unknown as { order: { findFirst: jest.Mock } }).order = {
+      findFirst: jest.fn().mockResolvedValue({
+        id: 'order-1',
+        status: 'pending_cod',
+        items: [{ productId: 'prod-1', quantity: 2 }],
+      }),
+    };
+    tx.order.updateMany.mockResolvedValue({ count: 0 });
+
+    await service.cancelBuyerOrder('user-1', 'order-1').catch(() => undefined);
+
+    expect(tx.product.update).not.toHaveBeenCalled();
   });
 });
 
