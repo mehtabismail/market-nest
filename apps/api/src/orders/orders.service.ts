@@ -8,7 +8,6 @@ import type { OrderDetailDTO, OrderSummaryDTO } from '@marketnest/shared-types';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CartService } from '../cart/cart.service';
-import { ProductsService } from '../products/products.service';
 import type { RequestUser } from '../auth/auth.types';
 import { CheckoutBodyDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -21,7 +20,6 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cart: CartService,
-    private readonly products: ProductsService,
     private readonly notifications: NotificationsService,
   ) {}
 
@@ -60,16 +58,30 @@ export class OrdersService {
       });
 
       for (const line of cart.items) {
-        const product = await this.products.getPublishedForPurchase(line.productId);
+        // Read inside the transaction: the previous version validated stock via
+        // this.prisma, outside it.
+        const product = await tx.product.findFirst({
+          where: { id: line.productId, status: 'published' },
+          select: { id: true, title: true, sellerId: true, ownerType: true },
+        });
 
-        if (product.stockQty < line.quantity) {
-          throw new BadRequestException(`Insufficient stock for ${product.title}`);
+        if (!product) {
+          throw new NotFoundException(`Product ${line.productId} not available`);
         }
 
-        await tx.product.update({
-          where: { id: product.id },
+        // Claim stock with a conditional update rather than checking then
+        // writing. At READ COMMITTED a check-then-write lets two concurrent
+        // checkouts both observe the last unit and both decrement, driving
+        // stock negative. Gating the decrement on `stockQty >= quantity` makes
+        // the DB serialise the claim: exactly one of them updates a row.
+        const claimed = await tx.product.updateMany({
+          where: { id: product.id, stockQty: { gte: line.quantity } },
           data: { stockQty: { decrement: line.quantity } },
         });
+
+        if (claimed.count === 0) {
+          throw new BadRequestException(`Insufficient stock for ${product.title}`);
+        }
 
         await tx.orderItem.create({
           data: {
@@ -285,12 +297,20 @@ export class OrdersService {
     });
   }
 
+  /**
+   * Idempotent: Stripe redelivers webhooks, and a replay previously re-sent the
+   * confirmation email and could resurrect a cancelled order back to confirmed.
+   * The status guard means only the first delivery transitions the order.
+   */
   async confirmPayment(orderId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.update({
-        where: { id: orderId },
+    const transitioned = await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.order.updateMany({
+        where: { id: orderId, status: 'pending_payment' },
         data: { status: 'confirmed' },
       });
+
+      if (count === 0) return false;
+
       await tx.orderItem.updateMany({
         where: { orderId },
         data: { status: 'confirmed' },
@@ -299,9 +319,14 @@ export class OrdersService {
         where: { orderId },
         data: { status: 'succeeded', paidAt: new Date() },
       });
-      void this.notifications.enqueueEmail('order_confirmation_buyer', { orderId });
-      return order;
+      return true;
     });
+
+    if (transitioned) {
+      void this.notifications.enqueueEmail('order_confirmation_buyer', { orderId });
+    }
+
+    return this.prisma.order.findUnique({ where: { id: orderId } });
   }
 
   private toSummary(

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrdersService } from '../orders/orders.service';
@@ -65,12 +70,19 @@ export class PaymentsService {
   }
 
   async handleWebhook(rawBody: Buffer, signature: string) {
-    if (!this.stripe) return { received: false };
+    // Misconfiguration must fail closed. Returning 2xx tells Stripe the event
+    // was handled, so it stops retrying and the delivery is lost for good —
+    // buyers are charged and their orders never leave pending_payment. A 5xx
+    // makes Stripe retry with backoff, so events survive a bad deploy.
+    if (!this.stripe) {
+      this.logger.error('Stripe webhook received but STRIPE_SECRET_KEY is not configured');
+      throw new ServiceUnavailableException('Payment processing is not configured');
+    }
 
     const secret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!secret) {
-      this.logger.warn('STRIPE_WEBHOOK_SECRET not set');
-      return { received: false };
+      this.logger.error('Stripe webhook received but STRIPE_WEBHOOK_SECRET is not set');
+      throw new ServiceUnavailableException('Payment processing is not configured');
     }
 
     let event: Stripe.Event;
