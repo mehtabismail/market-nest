@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock } from 'lucide-react';
+import { Lock, UserRoundCog } from 'lucide-react';
+import { ROLE_LABEL, useAuth, type UserRole } from '@/contexts/auth-context';
 
 interface AuthModalProps {
   open: boolean;
@@ -93,6 +94,63 @@ export function AuthGate({
         </Link>
         <Link href={signupHref} className="btn btn-outline">
           Create account
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+const PORTAL_HOME: Record<UserRole, string> = {
+  buyer: '/shop',
+  seller: '/seller',
+  superadmin: '/admin',
+};
+
+/**
+ * Shown when a valid session belongs to the wrong role for this surface.
+ *
+ * The shop shares one session with the admin and seller portals, so an admin
+ * browsing /shop is genuinely signed in — just not as a customer. Without this
+ * they pass the authenticated check, reach checkout, and the API rejects them
+ * with a bare 403.
+ */
+export function WrongAccountGate({
+  role,
+  action = 'shop',
+  loginHref = '/shop/login',
+}: {
+  role: UserRole;
+  action?: string;
+  loginHref?: string;
+}) {
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  return (
+    <div className="card mx-auto max-w-lg animate-slide-up p-8 text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-mn-accent-soft text-mn-accent">
+        <UserRoundCog className="h-6 w-6" />
+      </div>
+      <h1 className="mb-2 font-outfit text-xl font-bold text-mn-ink">
+        Switch to a customer account
+      </h1>
+      <p className="mb-6 text-sm text-mn-mid">
+        You are signed in as {ROLE_LABEL[role] === 'administrator' ? 'an' : 'a'}{' '}
+        <strong>{ROLE_LABEL[role]}</strong>. To {action}, sign in with a customer account.
+      </p>
+      <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            logout();
+            router.push(loginHref);
+          }}
+        >
+          Sign out and switch
+        </button>
+        <Link href={PORTAL_HOME[role]} className="btn btn-outline">
+          Back to my dashboard
         </Link>
       </div>
     </div>

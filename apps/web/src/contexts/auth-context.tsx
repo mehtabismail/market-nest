@@ -9,9 +9,16 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, UNAUTHORIZED_EVENT } from '@/lib/api';
 
 export type UserRole = 'buyer' | 'seller' | 'superadmin';
+
+/** Human-readable role name, for copy shown when a session is wrong for a portal. */
+export const ROLE_LABEL: Record<UserRole, string> = {
+  buyer: 'customer',
+  seller: 'seller',
+  superadmin: 'administrator',
+};
 
 export interface AuthUser {
   id: string;
@@ -64,6 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // The API rejected our token mid-session (expiry or revocation). Clear the
+  // session so surfaces render a sign-in prompt instead of failing silently
+  // against a token the server no longer accepts.
+  useEffect(() => {
+    const onUnauthorized = () => {
+      localStorage.removeItem('mn_token');
+      setToken(null);
+      setUser(null);
+      setLoading(false);
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, []);
 
   const setSession = useCallback(
     async (accessToken: string) => {

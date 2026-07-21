@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { AuthGate } from '@/components/auth/auth-modal';
+import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
 import type { OrderSummaryDTO } from '@marketnest/shared-types';
 
 export default function BuyerOrdersPage() {
-  const { token, loading: authLoading, isAuthenticated } = useAuth();
+  const { token, user, loading: authLoading, isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<OrderSummaryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +44,18 @@ export default function BuyerOrdersPage() {
           message="Track deliveries, order status, and purchase history."
           loginHref="/shop/login?next=/shop/orders"
           signupHref="/shop/signup"
+        />
+      </main>
+    );
+  }
+
+  if (user && user.role !== 'buyer') {
+    return (
+      <main className="p-6 max-w-4xl mx-auto w-full">
+        <WrongAccountGate
+          role={user.role}
+          action="view customer orders"
+          loginHref="/shop/login?next=/shop/orders"
         />
       </main>
     );

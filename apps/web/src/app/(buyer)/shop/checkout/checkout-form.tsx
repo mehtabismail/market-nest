@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { AuthGate } from '@/components/auth/auth-modal';
+import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch, ensureGuestSession } from '@/lib/api';
 import { StripePayment } from '@/components/stripe-payment';
@@ -11,7 +11,7 @@ import type { OrderDetailDTO, PaymentIntentResponse } from '@marketnest/shared-t
 
 export function CheckoutForm() {
   const router = useRouter();
-  const { token, loading: authLoading, isAuthenticated } = useAuth();
+  const { token, user, loading: authLoading, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: string;
@@ -122,6 +122,18 @@ export function CheckoutForm() {
         message="Create an account or sign in to complete your purchase securely."
         loginHref="/shop/login?next=/shop/checkout"
         signupHref="/shop/signup"
+      />
+    );
+  }
+
+  // Signed in, but not as a customer. The API rejects non-buyers at checkout,
+  // so stop here rather than letting them fill the form and hit a 403.
+  if (!authLoading && user && user.role !== 'buyer') {
+    return (
+      <WrongAccountGate
+        role={user.role}
+        action="complete a purchase"
+        loginHref="/shop/login?next=/shop/checkout"
       />
     );
   }

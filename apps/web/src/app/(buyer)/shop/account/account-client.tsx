@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { AuthGate } from '@/components/auth/auth-modal';
+import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
@@ -40,7 +40,7 @@ interface AddressPayload {
 }
 
 export function AccountClient() {
-  const { token, loading: authLoading, isAuthenticated } = useAuth();
+  const { token, user, loading: authLoading, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -141,6 +141,17 @@ export function AccountClient() {
         message="Manage your profile, saved addresses, and order preferences."
         loginHref="/shop/login?next=/shop/account"
         signupHref="/shop/signup"
+      />
+    );
+  }
+
+  // Saved addresses come from /buyer/addresses, which is buyer-only.
+  if (user && user.role !== 'buyer') {
+    return (
+      <WrongAccountGate
+        role={user.role}
+        action="manage a customer profile"
+        loginHref="/shop/login?next=/shop/account"
       />
     );
   }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
 import type { OrderDetailDTO } from '@marketnest/shared-types/buyer';
@@ -11,7 +12,7 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancelState, setCancelState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const loadOrder = useCallback(async (silent = false) => {
     if (!token) {
@@ -76,12 +77,24 @@ export default function OrderConfirmationPage({ params }: { params: { id: string
   if (!token) {
     return (
       <main className="p-6 max-w-2xl mx-auto">
-        <p className="text-sm">
-          <Link href="/shop/login" className="text-blue font-semibold">
-            Sign in
-          </Link>{' '}
-          to view this order.
-        </p>
+        <AuthGate
+          title="Sign in to view this order"
+          message="Order details are only visible to the customer who placed the order."
+          loginHref={`/shop/login?next=/shop/orders/${params.id}`}
+          signupHref="/shop/signup"
+        />
+      </main>
+    );
+  }
+
+  if (user && user.role !== 'buyer') {
+    return (
+      <main className="p-6 max-w-2xl mx-auto">
+        <WrongAccountGate
+          role={user.role}
+          action="view customer orders"
+          loginHref={`/shop/login?next=/shop/orders/${params.id}`}
+        />
       </main>
     );
   }

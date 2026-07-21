@@ -12,7 +12,10 @@ interface ReviewData {
 }
 
 export function ProductReviews({ productId }: { productId: string }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  // POST /reviews is buyer-only. Showing the form to anyone else guarantees a
+  // rejected submission, so only customers get it.
+  const canReview = Boolean(token) && user?.role === 'buyer';
   const [data, setData] = useState<ReviewData | null>(null);
   const [rating, setRating] = useState(5);
   const [body, setBody] = useState('');
@@ -57,6 +60,7 @@ export function ProductReviews({ productId }: { productId: string }) {
           <span className="text-gray"> / 5 - {data.reviewCount} reviews</span>
         </p>
       )}
+      {canReview && (
       <form onSubmit={submitReview} className="card p-4 mb-6 space-y-3">
         <p className="text-sm font-semibold">Write a review</p>
         <select
@@ -81,6 +85,7 @@ export function ProductReviews({ productId }: { productId: string }) {
         </button>
         {message && <p className="text-xs text-gray">{message}</p>}
       </form>
+      )}
       <div className="space-y-3">
         {data.items.map((r) => (
           <div key={r.id} className="card p-4">
