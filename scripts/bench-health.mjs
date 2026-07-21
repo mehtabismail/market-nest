@@ -25,4 +25,4 @@ const p95 = times[Math.floor(times.length * 0.95)] ?? 0;
 
 console.log(`URL: ${url}`);
 console.log(`Runs: ${runs}, success: ${ok}/${runs}`);
-console.log(`Latency ms � p50: ${p50.toFixed(1)}, p95: ${p95.toFixed(1)}, max: ${times.at(-1)?.toFixed(1)}`);
+console.log(`Latency ms — p50: ${p50.toFixed(1)}, p95: ${p95.toFixed(1)}, max: ${times.at(-1)?.toFixed(1)}`);

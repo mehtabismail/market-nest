@@ -77,7 +77,7 @@ curl http://localhost:3001/api/v1/health
 
 ## Performance
 
-- [ ] Redis catalogue cache (categories, banners, featured � 60s TTL)
+- [ ] Redis catalogue cache (categories, banners, featured — 60s TTL)
 - [ ] ISR on shop home (`revalidate = 60`)
 - [ ] Run `npm run bench:health` for baseline latency
 
