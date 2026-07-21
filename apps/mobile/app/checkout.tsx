@@ -100,7 +100,7 @@ export default function CheckoutScreen() {
             value={address[field.key]}
             onChangeText={(value) => setAddress((prev) => ({ ...prev, [field.key]: value }))}
             placeholder={field.label}
-            placeholderTextColor={colors.mid}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
             keyboardType={field.key === 'phone' ? 'phone-pad' : 'default'}
             accessibilityLabel={field.label}
@@ -160,30 +160,30 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
-  heading: { fontSize: fontSize.lg, fontWeight: '700', color: colors.ink, marginTop: spacing.sm },
+  heading: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginTop: spacing.sm },
   input: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.ink,
+    color: colors.text,
     fontSize: fontSize.base,
   },
   paymentCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.teal,
     padding: spacing.lg,
     gap: spacing.xs,
   },
-  paymentTitle: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
-  muted: { fontSize: fontSize.sm, color: colors.mid, textAlign: 'center' },
+  paymentTitle: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
+  muted: { fontSize: fontSize.sm, color: colors.textMuted, textAlign: 'center' },
   error: { color: colors.accent, fontSize: fontSize.sm },
   primary: {
-    backgroundColor: colors.ink,
+    backgroundColor: colors.accent,
     borderRadius: radii.full,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing['2xl'],

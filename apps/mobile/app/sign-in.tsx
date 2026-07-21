@@ -64,7 +64,7 @@ export default function SignInScreen() {
             value={email}
             onChangeText={setEmail}
             placeholder="Email"
-            placeholderTextColor={colors.mid}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
             autoCapitalize="none"
             autoComplete="email"
@@ -75,7 +75,7 @@ export default function SignInScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="Password"
-            placeholderTextColor={colors.mid}
+            placeholderTextColor={colors.textMuted}
             style={styles.input}
             secureTextEntry
             autoComplete="current-password"
@@ -103,16 +103,16 @@ const styles = StyleSheet.create({
   input: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.ink,
+    color: colors.text,
     fontSize: fontSize.base,
   },
   error: { color: colors.accent, fontSize: fontSize.sm },
   primary: {
-    backgroundColor: colors.ink,
+    backgroundColor: colors.accent,
     borderRadius: radii.full,
     paddingVertical: spacing.lg,
     alignItems: 'center',

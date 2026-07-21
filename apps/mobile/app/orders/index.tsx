@@ -7,7 +7,7 @@ import { useAuth } from '../../src/contexts/auth-context';
 import { colors, fontSize, formatPrice, radii, shadow, spacing, statusColors } from '../../src/theme';
 
 function statusColor(status: string): string {
-  return (statusColors as Record<string, string>)[status] ?? colors.mid;
+  return (statusColors as Record<string, string>)[status] ?? colors.textMuted;
 }
 
 function label(status: string): string {
@@ -78,7 +78,7 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, gap: spacing.md },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  orderId: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
+  orderId: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   pill: { paddingHorizontal: spacing.md, paddingVertical: 3, borderRadius: radii.full },
   pillText: { color: colors.white, fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  muted: { fontSize: fontSize.sm, color: colors.mid },
-  total: { fontSize: fontSize.lg, fontWeight: '700', color: colors.ink, marginTop: spacing.xs },
+  muted: { fontSize: fontSize.sm, color: colors.textMuted },
+  total: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginTop: spacing.xs },
 });

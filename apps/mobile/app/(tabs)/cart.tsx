@@ -106,7 +106,7 @@ export default function CartScreen() {
 
       {/* Glass here is purposeful: the summary floats over the list so the
           subtotal and CTA stay visible while scrolling. */}
-      <GlassSurface style={styles.footer} fallbackColor={colors.white}>
+      <GlassSurface style={styles.footer} fallbackColor={colors.surface}>
         <View style={styles.summaryRow}>
           <Text style={styles.muted}>
             Subtotal · {cart?.itemCount} {cart?.itemCount === 1 ? 'item' : 'items'}
@@ -135,17 +135,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
   },
-  thumb: { width: 58, height: 58, borderRadius: radii.md, backgroundColor: colors.cream },
+  thumb: { width: 58, height: 58, borderRadius: radii.md, backgroundColor: colors.surfaceHigh },
   lineBody: { flex: 1, gap: 3 },
-  lineTitle: { fontSize: fontSize.sm, fontWeight: '600', color: colors.ink },
-  muted: { fontSize: fontSize.xs, color: colors.mid },
-  lineTotal: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
+  lineTitle: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
+  muted: { fontSize: fontSize.xs, color: colors.textMuted },
+  lineTotal: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   footer: {
     position: 'absolute',
     left: 0,
@@ -157,11 +157,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  subtotal: { fontSize: fontSize.xl, fontWeight: '700', color: colors.ink },
+  subtotal: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
   checkout: {
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.accent,
     borderRadius: radii.full,
     paddingVertical: spacing.lg,
     alignItems: 'center',

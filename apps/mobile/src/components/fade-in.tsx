@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { duration, stagger } from '@marketnest/tokens';
 
@@ -13,11 +14,27 @@ import { duration, stagger } from '@marketnest/tokens';
  * Reanimated's layout animations are skipped automatically when the system
  * Reduce Motion setting is on, so no extra guard is needed here.
  */
-export function FadeInItem({ index = 0, children }: { index?: number; children: ReactNode }) {
+export function FadeInItem({
+  index = 0,
+  children,
+  style,
+}: {
+  index?: number;
+  children: ReactNode;
+  /**
+   * Must be forwarded for grid cells: this wrapper sits between the cell and the
+   * card, so without `flex: 1` the card's own flex has nothing to stretch
+   * against and collapses to zero height.
+   */
+  style?: StyleProp<ViewStyle>;
+}) {
   const delay = Math.min(index, stagger.maxItems) * stagger.item;
 
   return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(duration.enter).springify()}>
+    <Animated.View
+      style={style}
+      entering={FadeInDown.delay(delay).duration(duration.enter).springify()}
+    >
       {children}
     </Animated.View>
   );

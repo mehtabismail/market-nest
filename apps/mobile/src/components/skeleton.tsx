@@ -64,9 +64,9 @@ export function ProductGridSkeleton({ count = 6 }: { count?: number }) {
 }
 
 const styles = StyleSheet.create({
-  base: { backgroundColor: colors.cream, borderRadius: radii.sm },
+  base: { backgroundColor: colors.surfaceHigh, borderRadius: radii.sm },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,

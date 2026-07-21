@@ -8,13 +8,14 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
+        {/* Light glyphs — the canvas is near-black. */}
+        <StatusBar style="light" />
         <Stack
           screenOptions={{
-            headerStyle: { backgroundColor: colors.paper },
-            headerTintColor: colors.ink,
+            headerStyle: { backgroundColor: colors.base },
+            headerTintColor: colors.text,
             headerTitleStyle: { fontWeight: '700' },
-            contentStyle: { backgroundColor: colors.paper },
+            contentStyle: { backgroundColor: colors.base },
           }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

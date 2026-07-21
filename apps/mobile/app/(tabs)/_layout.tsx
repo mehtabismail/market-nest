@@ -28,10 +28,10 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.mid,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: supportsGlass
           ? { position: 'absolute', backgroundColor: 'transparent', borderTopWidth: 0 }
-          : { backgroundColor: colors.white, borderTopColor: colors.border },
+          : { backgroundColor: colors.surface, borderTopColor: colors.border },
         tabBarBackground: supportsGlass
           ? () => <GlassSurface style={StyleSheet.absoluteFill as never} />
           : undefined,
@@ -40,10 +40,10 @@ export default function TabsLayout() {
         headerBackground: supportsGlass
           ? () => <GlassSurface style={StyleSheet.absoluteFill as never} />
           : undefined,
-        headerStyle: supportsGlass ? undefined : { backgroundColor: colors.paper },
-        headerTintColor: colors.ink,
+        headerStyle: supportsGlass ? undefined : { backgroundColor: colors.base },
+        headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700', fontSize: 17 },
-        sceneStyle: { backgroundColor: colors.paper },
+        sceneStyle: { backgroundColor: colors.base },
       }}
     >
       <Tabs.Screen

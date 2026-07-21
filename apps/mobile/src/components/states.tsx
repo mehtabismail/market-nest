@@ -48,12 +48,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.lg,
     fontWeight: '700',
-    color: colors.ink,
+    color: colors.text,
     textAlign: 'center',
   },
   muted: {
     fontSize: fontSize.sm,
-    color: colors.mid,
+    color: colors.textMuted,
     textAlign: 'center',
   },
   retry: {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: radii.full,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.accent,
   },
   retryLabel: {
     color: colors.white,

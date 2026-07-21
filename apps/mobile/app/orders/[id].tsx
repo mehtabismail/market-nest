@@ -6,7 +6,7 @@ import { useApi } from '../../src/hooks/use-api';
 import { colors, fontSize, formatPrice, radii, shadow, spacing, statusColors } from '../../src/theme';
 
 function statusColor(status: string): string {
-  return (statusColors as Record<string, string>)[status] ?? colors.mid;
+  return (statusColors as Record<string, string>)[status] ?? colors.textMuted;
 }
 
 export default function OrderDetailScreen() {
@@ -91,14 +91,14 @@ function Row({ label, value, emphasis }: { label: string; value: string; emphasi
 const styles = StyleSheet.create({
   container: { padding: spacing.lg, gap: spacing.md },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  heading: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
+  heading: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   pill: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.md,
@@ -106,22 +106,22 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   pillText: { color: colors.white, fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  muted: { fontSize: fontSize.sm, color: colors.mid },
-  value: { fontSize: fontSize.sm, color: colors.ink },
+  muted: { fontSize: fontSize.sm, color: colors.textMuted },
+  value: { fontSize: fontSize.sm, color: colors.text },
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.cream,
+    borderTopColor: colors.surfaceHigh,
   },
   itemBody: { flex: 1, gap: 2 },
-  itemTitle: { fontSize: fontSize.sm, fontWeight: '600', color: colors.ink },
-  itemTotal: { fontSize: fontSize.sm, fontWeight: '700', color: colors.ink },
+  itemTitle: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
+  itemTotal: { fontSize: fontSize.sm, fontWeight: '700', color: colors.text },
   tracking: { fontSize: fontSize.xs, color: colors.teal, fontWeight: '600' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  totalLabel: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
-  totalValue: { fontSize: fontSize.base, fontWeight: '700', color: colors.ink },
-  address: { fontSize: fontSize.sm, color: colors.mid, lineHeight: 22 },
+  totalLabel: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
+  totalValue: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
+  address: { fontSize: fontSize.sm, color: colors.textMuted, lineHeight: 22 },
 });

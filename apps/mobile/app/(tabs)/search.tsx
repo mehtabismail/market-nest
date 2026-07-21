@@ -33,7 +33,7 @@ export default function SearchScreen() {
         value={term}
         onChangeText={setTerm}
         placeholder="Search products"
-        placeholderTextColor={colors.mid}
+        placeholderTextColor={colors.textMuted}
         style={styles.input}
         autoCorrect={false}
         returnKeyType="search"
@@ -59,7 +59,7 @@ export default function SearchScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
             <View style={styles.cell}>
-              <FadeInItem index={index}>
+              <FadeInItem index={index} style={styles.fill}>
                 <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
               </FadeInItem>
             </View>
@@ -76,14 +76,15 @@ const styles = StyleSheet.create({
     margin: spacing.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.full,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.ink,
+    color: colors.text,
     fontSize: fontSize.base,
   },
   list: { paddingHorizontal: spacing.lg, paddingBottom: 96, gap: spacing.lg },
   row: { gap: spacing.lg },
   cell: { flex: 1, maxWidth: '50%' },
+  fill: { flex: 1 },
 });

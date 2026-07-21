@@ -186,7 +186,7 @@ export default function ProductScreen() {
 
       {/* Floating action bar. Glass here is purposeful: it signals that content
           continues beneath, and keeps the primary CTA reachable at all times. */}
-      <GlassSurface style={styles.footer} fallbackColor={colors.white}>
+      <GlassSurface style={styles.footer} fallbackColor={colors.surface}>
         <View style={styles.footerInner}>
           <PressableScale
             style={[styles.cta, (outOfStock || adding) && styles.ctaDisabled]}
@@ -226,19 +226,19 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 120 },
   loading: { flex: 1 },
   heroSkeleton: { width: '100%', height: HERO_HEIGHT, borderRadius: 0 },
-  heroWrap: { height: HERO_HEIGHT, overflow: 'hidden', backgroundColor: colors.cream },
+  heroWrap: { height: HERO_HEIGHT, overflow: 'hidden', backgroundColor: colors.surfaceHigh },
   hero: { width: '100%', height: HERO_HEIGHT },
   body: { padding: spacing.lg, gap: spacing.md },
   badgeRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   pill: { paddingHorizontal: spacing.md, paddingVertical: 3, borderRadius: radii.full },
   pillText: { color: colors.white, fontSize: 11, fontWeight: '700' },
-  title: { fontSize: fontSize['2xl'], fontWeight: '700', color: colors.ink, lineHeight: 32 },
+  title: { fontSize: fontSize['2xl'], fontWeight: '700', color: colors.text, lineHeight: 32 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
-  price: { fontSize: fontSize['2xl'], fontWeight: '700', color: colors.ink },
-  comparePrice: { fontSize: fontSize.base, color: colors.mid, textDecorationLine: 'line-through' },
+  price: { fontSize: fontSize['2xl'], fontWeight: '700', color: colors.text },
+  comparePrice: { fontSize: fontSize.base, color: colors.textMuted, textDecorationLine: 'line-through' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  rating: { fontSize: fontSize.sm, color: colors.mid, fontWeight: '600' },
-  description: { fontSize: fontSize.base, color: colors.mid, lineHeight: 25 },
+  rating: { fontSize: fontSize.sm, color: colors.textMuted, fontWeight: '600' },
+  description: { fontSize: fontSize.base, color: colors.textMuted, lineHeight: 25 },
   error: { color: colors.accent, fontSize: fontSize.sm },
   footer: {
     position: 'absolute',
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: colors.ink,
+    backgroundColor: colors.accent,
     borderRadius: radii.full,
     paddingVertical: spacing.lg,
     alignItems: 'center',
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     ...(shadow('sm') as object),

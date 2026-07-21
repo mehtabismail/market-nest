@@ -10,6 +10,40 @@
  * cards are what make an inconsistent catalogue read as one coherent store.
  */
 
+/**
+ * Dark canvas for the mobile app.
+ *
+ * The web portals stay on warm paper. Mobile inverts deliberately, for one
+ * concrete reason: iOS Liquid Glass renders by refracting what sits behind it,
+ * so over a flat light background it produces no visible effect at all. Glass
+ * needs depth and contrast underneath to read — which is why every premium
+ * shopping app that uses it is dark.
+ *
+ * The brand does not change. Same ink, same coral, same gold — ink simply moves
+ * from being the text colour to being the canvas, and the accents gain contrast
+ * rather than losing identity.
+ */
+export const dark = {
+  /** Page canvas. Near-black, warm-leaning, never pure #000. */
+  base: '#0e0f11',
+  /** Cards and raised surfaces. */
+  surface: '#17181b',
+  /** Elevated surfaces: sheets, pressed cards, inputs. */
+  surfaceHigh: '#212328',
+  /** Hairlines on dark. */
+  border: '#2c2e33',
+  /** Primary text on dark. */
+  text: '#f5f3ee',
+  /** Secondary text — meets 4.5:1 on `base`. */
+  textMuted: '#a3a09a',
+  /** Tertiary. Labels only, never body copy. */
+  textFaint: '#6f6d68',
+  /** Translucent fills for glass-adjacent chips over imagery. */
+  scrim: 'rgba(14,15,17,0.55)',
+  scrimStrong: 'rgba(14,15,17,0.78)',
+  hairline: 'rgba(245,243,238,0.12)',
+} as const;
+
 export const colors = {
   /** Near-black for primary text and primary buttons. */
   ink: '#0e0f11',

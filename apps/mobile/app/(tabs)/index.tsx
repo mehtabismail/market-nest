@@ -27,7 +27,7 @@ export default function ShopScreen() {
   const renderItem = useCallback(
     ({ item, index }: { item: BuyerProductListItemDTO; index: number }) => (
       <View style={styles.cell}>
-        <FadeInItem index={index}>
+        <FadeInItem index={index} style={styles.fill}>
           <ProductCard product={item} onPress={() => router.push(`/product/${item.id}`)} />
         </FadeInItem>
       </View>
@@ -77,4 +77,5 @@ const styles = StyleSheet.create({
   },
   row: { gap: spacing.lg },
   cell: { flex: 1, maxWidth: '50%' },
+  fill: { flex: 1 },
 });
