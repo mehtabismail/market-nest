@@ -29,7 +29,20 @@
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-native.png",
+          "imageWidth": 320,
+          "resizeMode": "contain",
+          "backgroundColor": "#030906",
+          "dark": {
+            "image": "./assets/splash-native.png",
+            "backgroundColor": "#030906"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

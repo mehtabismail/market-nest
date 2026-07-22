@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +14,7 @@ import {
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AnimatedSplash } from '../src/components/animated-splash';
 import { AuthProvider } from '../src/contexts/auth-context';
 import { CartProvider } from '../src/contexts/cart-context';
 import { ThemeProvider, useTheme } from '../src/contexts/theme-context';
@@ -59,9 +60,13 @@ export default function RootLayout() {
     DMSans_700Bold,
   });
 
+  // The animated launch sequence plays over the app until it dismisses itself.
+  const [splashDone, setSplashDone] = useState(false);
+
   useEffect(() => {
-    // Hide on error too. A missing font file should degrade to system type, not
-    // leave the user staring at a splash screen forever.
+    // Hand the native (static) splash off to the animated one the instant fonts
+    // are ready. Both sit on the same #030906 canvas, so there is no flash —
+    // the animated sequence simply begins building up from black.
     if (fontsLoaded || fontError) void SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
@@ -75,7 +80,10 @@ export default function RootLayout() {
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
+              {/* The app mounts underneath immediately, so it is fully warmed
+                  by the time the splash fades out. */}
               <RootNavigator />
+              {!splashDone ? <AnimatedSplash onFinish={() => setSplashDone(true)} /> : null}
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

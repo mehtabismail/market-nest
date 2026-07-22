@@ -51,6 +51,10 @@ const TabButton = forwardRef<RNView, TabButtonProps>(
     // `style` is pulled out of the spread: TabTrigger types it as a possible
     // callback, which Pressable's array form does not accept, and the extra
     // margins we pass are always a plain object anyway.
+    //
+    // TabList/TabTrigger also inject a row flexDirection onto the asChild slot.
+    // Our column layout must come last so the label stacks under the icon
+    // instead of sitting beside it.
     return (
       <Pressable
         ref={ref}
@@ -58,7 +62,7 @@ const TabButton = forwardRef<RNView, TabButtonProps>(
         accessibilityRole="tab"
         accessibilityState={{ selected: isFocused }}
         accessibilityLabel={label}
-        style={[styles.tab, style as StyleProp<ViewStyle>]}
+        style={[styles.tab, style as StyleProp<ViewStyle>, styles.tabStack]}
       >
         <View style={[styles.tabIcon, isFocused ? { backgroundColor: theme.accentWash } : null]}>
           <Icon name={icon} size={20} color={isFocused ? theme.accent : theme.textMuted} />
@@ -79,6 +83,7 @@ const TabButton = forwardRef<RNView, TabButtonProps>(
             },
           ]}
           allowFontScaling={false}
+          numberOfLines={1}
         >
           {label}
         </Text>
@@ -226,7 +231,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.22)',
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6, gap: 2 },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    gap: 2,
+  },
+  // Applied after TabTrigger's injected styles so column wins over their row.
+  tabStack: { flexDirection: 'column' },
   tabIcon: {
     width: 36,
     height: 36,
@@ -246,5 +259,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: { fontSize: 9, fontFamily: font.bodyBold, color: '#ffffff' },
-  tabLabel: { fontSize: 9.5, letterSpacing: 0.2 },
+  tabLabel: { fontSize: 9.5, letterSpacing: 0.2, textAlign: 'center' },
 });

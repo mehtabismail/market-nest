@@ -10,7 +10,22 @@ _Last updated: 2026-07-22._
 
 ## Currently being worked on
 
-- Nothing in-flight. The mobile design implementation phase is complete and green (typecheck + lint + 30 API tests pass). Changes are in the working tree, **not committed**.
+- Nothing in-flight.
+
+## Just completed — App icon + animated splash (2026-07-22)
+
+Implemented `MarketNest-Splash.dc.html` (the "Nest Mark" brand identity).
+
+- **Icons** — regenerated all `apps/mobile/assets` PNGs from the design's SVG (3 arcs + emerald orb): `icon.png` (opaque iOS), `android-icon-{foreground,background,monochrome}.png`, `splash-icon.png`, `favicon.png`. Rasterised with a scratchpad-only `sharp` (never added to project deps). Generator kept at scratchpad `gen-icons.mjs`.
+- **Native splash bridge** — `expo-splash-screen` config plugin in `app.json`: transparent `splash-native.png` over `#030906`, so the native splash shows only the dark canvas and the animated sequence builds up from black (a visible mark would flash then redraw).
+- **Animated splash** — `apps/mobile/src/components/animated-splash.tsx`, a 1:1 port of the design sequence (bg fade, drifting blobs, rising particles, scanline texture, expanding rings, pulsing halo, self-drawing arcs via strokeDashoffset, orb back-out pop, title reveal with letter-spacing tighten, tagline, loading dots, progress sweep), then fades out ~5.2s and reveals the app. Built with react-native-svg + Reanimated; honours Reduce Motion. Mounted as an overlay in `app/_layout.tsx` over the (already-warm) app.
+- Verified: full monorepo typechecks; `npx expo export --platform ios` bundles clean (no import/worklet errors).
+- **Native changes need a rebuild** — the icon and native splash config only take effect after `npx expo prebuild --clean` + `expo run:ios`/`run:android` (or a new EAS build), NOT in Expo Go or hot reload. The `AnimatedSplash` component itself is JS and hot-reloads.
+- The design's Gaussian blur-in on icon/title has no cheap RN equivalent → expressed as an opacity ramp; the motion is intact.
+
+## Just completed — Tab bar label layout (2026-07-22)
+
+- Fixed bottom tabs in `apps/mobile/app/(tabs)/_layout.tsx`: TabTrigger's injected `flexDirection: 'row'` was placing labels beside icons. Forced `tabStack` (`flexDirection: 'column'`) after injected styles so labels sit under icons.
 
 ## Just completed — Mobile design (`MarketNest.dc.html`)
 
