@@ -1,11 +1,15 @@
 ---
-description: MarketNest platform standards � architecture, scale, anonymity, patterns
+description: MarketNest platform standards � architecture, scale, anonymity, patterns
 alwaysApply: true
 ---
 
-# MarketNest � mandatory development standards
+# MarketNest — mandatory development standards
 
-Source of truth: `MarketNest_Architecture_v2.pdf`, `MarketNest_UserStories_v2.pdf`, `docs/ARCHITECTURE_PRINCIPLES.md`, `AGENTS.md`.
+**Before any task, read the six context files at the repo root, in order — they are the source of truth and override defaults. Do not vibe code:**
+`PRD.md` → `Architecture.md` → `Rules.md` → `Phases.md` → `Design.md` → `Memory.md`.
+Update `Memory.md` when you finish. This rule file is a summary; the six files are authoritative.
+
+Further reference: `docs/ARCHITECTURE_PRINCIPLES.md`, `AGENTS.md`, `README.md`, and the mobile design source `MarketNest.dc.html`.
 
 ## Stack (do not substitute without explicit approval)
 
@@ -13,7 +17,7 @@ Source of truth: `MarketNest_Architecture_v2.pdf`, `MarketNest_UserStories_v2.pd
 - Frontend: Next.js 14 App Router, Tailwind, shadcn/ui, Vercel
 - API: NestJS (single gateway), Prisma, class-validator
 - Data: Supabase PostgreSQL + RLS + Auth + Storage + pgvector
-- Cache/queue: Upstash Redis, BullMQ
+- Cache/queue: Redis (local in dev, managed in prod — not Upstash), BullMQ
 - Payments: Stripe + COD
 
 ## Scale & performance (1M+ concurrent baseline)
@@ -33,11 +37,11 @@ Source of truth: `MarketNest_Architecture_v2.pdf`, `MarketNest_UserStories_v2.pd
 
 ## Code patterns
 
-- Domain modules in NestJS (`auth`, `products`, `orders`, �); thin controllers, logic in services
+- Domain modules in NestJS (`auth`, `products`, `orders`, �); thin controllers, logic in services
 - DTOs + validation on every API input; typed responses; no `any`
 - RLS is primary isolation; API guards are secondary (RBAC `@Roles()`)
 - Shared types in `packages/shared-types`; buyer barrel excludes seller DTOs
-- UI tokens from design system (`packages/ui`); match `MarketNest_UI_Designs.html`
+- UI tokens from `packages/tokens` (web coral + mobile green scales — see `Design.md`); never hardcode colours/spacing
 - Secrets only in env; never commit `.env`
 
 ## When adding features

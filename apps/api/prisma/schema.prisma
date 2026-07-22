@@ -70,6 +70,34 @@ enum PayoutStatus {
   @@map("payout_status")
 }
 
+enum CouponType {
+  percentage
+  fixed
+
+  @@map("coupon_type")
+}
+
+/// Seller KYC lifecycle. `draft` covers a part-completed wizard, so a seller who
+/// abandons at step 3 resumes there instead of restarting.
+enum KycStatus {
+  draft
+  submitted
+  approved
+  rejected
+
+  @@map("kyc_status")
+}
+
+enum NotificationType {
+  order_update
+  payout
+  kyc
+  promotion
+  system
+
+  @@map("notification_type")
+}
+
 model Profile {
   id        String   @id @db.Uuid
   role      UserRole @default(buyer)
@@ -102,12 +130,124 @@ model Seller {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  /// Aggregates behind the product page's trust card. Denormalised because the
+  /// alternative is a review join plus an order-item count on every product
+  /// read, and neither number needs to be transactionally exact.
+  ratingAvg       Decimal  @default(0) @map("rating_avg") @db.Decimal(3, 2)
+  salesCount      Int      @default(0) @map("sales_count")
+  isVerified      Boolean  @default(false) @map("is_verified")
+
   user     Profile?  @relation(fields: [userId], references: [id])
   products Product[]
   payouts  Payout[]
+  kyc      SellerKyc?
 
   @@index([storeSlug])
   @@map("sellers")
+}
+
+/// Seller identity verification, one row per seller.
+///
+/// Each wizard step lands in its own JSON column rather than in flat fields:
+/// the steps are edited and re-submitted as units, and the review UI reads them
+/// as units. Documents hold Supabase Storage paths, never the file bytes.
+model SellerKyc {
+  id             String    @id @default(uuid()) @db.Uuid
+  sellerId       String    @unique @map("seller_id") @db.Uuid
+  status         KycStatus @default(draft)
+  /// Highest wizard step the seller has completed (0–4), so an abandoned
+  /// application resumes where it stopped.
+  completedStep  Int       @default(0) @map("completed_step")
+  personal       Json      @default("{}")
+  business       Json      @default("{}")
+  /// `{ idFront, idBack, selfie }` — storage paths.
+  documents      Json      @default("{}")
+  /// Account number is stored masked; the full value never enters this table.
+  bank           Json      @default("{}")
+  submittedAt    DateTime? @map("submitted_at")
+  reviewedAt     DateTime? @map("reviewed_at")
+  reviewedBy     String?   @map("reviewed_by") @db.Uuid
+  rejectionReason String?  @map("rejection_reason")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  seller Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("seller_kyc")
+}
+
+/// Manufacturer brands, for the "Top Brands" row and brand filtering.
+model Brand {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  products Product[]
+
+  @@map("brands")
+}
+
+/// A buyer's saved products.
+///
+/// A join table rather than an array on the profile: the buyer home needs
+/// "is this product wishlisted" per tile, and a real index answers that without
+/// pulling and scanning the whole list.
+model WishlistItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlist_items")
+}
+
+/// Promotional discount codes.
+model Coupon {
+  id          String     @id @default(uuid()) @db.Uuid
+  code        String     @unique
+  description String?
+  type        CouponType @default(percentage)
+  /// Percent (0–100) when `type` is percentage, else an absolute amount.
+  value       Decimal    @db.Decimal(12, 2)
+  /// Minimum cart subtotal before the code applies.
+  minSubtotal Decimal    @default(0) @map("min_subtotal") @db.Decimal(12, 2)
+  /// Ceiling on a percentage discount. Null means uncapped.
+  maxDiscount Decimal?   @map("max_discount") @db.Decimal(12, 2)
+  startsAt    DateTime?  @map("starts_at")
+  endsAt      DateTime?  @map("ends_at")
+  /// Null means unlimited redemptions.
+  usageLimit  Int?       @map("usage_limit")
+  usedCount   Int        @default(0) @map("used_count")
+  isActive    Boolean    @default(true) @map("is_active")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([code])
+  @@map("coupons")
+}
+
+/// In-app notification feed — distinct from the transactional email queue.
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType @default(system)
+  title     String
+  body      String?
+  /// Deep link into the app, e.g. `/orders/<id>`.
+  link      String?
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, readAt])
+  @@map("notifications")
 }
 
 model Category {
@@ -116,6 +256,11 @@ model Category {
   slug      String   @unique
   parentId  String?  @map("parent_id") @db.Uuid
   imageUrl  String?  @map("image_url")
+  /// Glyph and hue that generate the category's artwork on mobile, where the
+  /// design uses no photography. Stored per row so adding a category is a data
+  /// change, not a client release.
+  emoji     String?
+  hue       Int      @default(160)
   sortOrder Int      @default(0) @map("sort_order")
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
@@ -140,6 +285,19 @@ model Product {
   sku          String?
   images       Json             @default("[]")
   status       ProductStatus    @default(draft)
+  brandId      String?          @map("brand_id") @db.Uuid
+  /// Hue (0–359) that keys the generated product artwork on mobile. Stored
+  /// rather than derived from the id so a seller's tiles stay visually stable
+  /// if the row is ever re-keyed, and so it can be hand-tuned per product.
+  hue          Int              @default(160)
+  /// Flash-deal window. Both null means the product is not on a timed deal;
+  /// the countdown on the buyer home reads from `dealEndsAt`.
+  dealStartsAt DateTime?        @map("deal_starts_at")
+  dealEndsAt   DateTime?        @map("deal_ends_at")
+  /// Denormalised view counter, driving the seller "Product Views" stat.
+  /// Incremented fire-and-forget; an occasional lost increment is acceptable
+  /// for a vanity metric and not worth a write on the read path's critical path.
+  viewCount    Int              @default(0) @map("view_count")
   /// pgvector column for semantic search (managed via raw SQL / migrations)
   embedding    Unsupported("vector(1536)")?
   createdAt    DateTime         @default(now()) @map("created_at")
@@ -147,15 +305,19 @@ model Product {
 
   seller   Seller?          @relation(fields: [sellerId], references: [id])
   category Category?        @relation(fields: [categoryId], references: [id])
+  brand    Brand?           @relation(fields: [brandId], references: [id])
   variants   ProductVariant[]
   reviews          Review[]
   orderItems       OrderItem[]
   featuredListings FeaturedListing[]
+  wishlistedBy     WishlistItem[]
 
   @@index([sellerId])
   @@index([categoryId])
   @@index([ownerType])
   @@index([status])
+  @@index([brandId])
+  @@index([dealEndsAt])
   @@map("products")
 }
 
@@ -210,8 +372,17 @@ model Order {
   paymentMethod   PaymentMethod @map("payment_method")
   subtotal        Decimal       @db.Decimal(12, 2)
   shippingFee     Decimal       @default(0) @map("shipping_fee") @db.Decimal(12, 2)
+  /// Absolute amount taken off, already resolved from the coupon's type. Stored
+  /// as money rather than as a percentage so a later coupon edit cannot
+  /// retroactively change what a historical order charged.
+  discount        Decimal       @default(0) @db.Decimal(12, 2)
+  /// Snapshot of the code used, not a foreign key — the coupon may be deleted.
+  couponCode      String?       @map("coupon_code")
   total           Decimal       @db.Decimal(12, 2)
   shippingAddress Json          @map("shipping_address")
+  /// Delivery window shown on the buyer's order tracker.
+  estimatedFrom   DateTime?     @map("estimated_from")
+  estimatedTo     DateTime?     @map("estimated_to")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 

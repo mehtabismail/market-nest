@@ -1,15 +1,27 @@
-# MarketNest ? Agent guide
+# MarketNest — Agent guide
 
 Multi-vendor marketplace: **Buyer** (`marketnest.com`), **Seller** (`sell.`), **Admin** (`admin.`).
 
-## Documents
+## ⚠️ Read these first — every session, before any task
+
+The six context files below are the source of truth and override your defaults. **Do not vibe code.** Read them in order:
+
+1. [PRD.md](PRD.md) — what to build, users, business rules
+2. [Architecture.md](Architecture.md) — stack, structure, patterns
+3. [Rules.md](Rules.md) — do / avoid / boundaries ← the contract
+4. [Phases.md](Phases.md) — phasing + current status
+5. [Design.md](Design.md) — web (coral) vs mobile (green) design systems
+6. [Memory.md](Memory.md) — done / in-progress / deferred ← update when you finish
+
+## Other reference
 
 | File | Purpose |
 |------|---------|
-| `MarketNest_Architecture_v2.pdf` | Stack, schema, phases, folder structure |
-| `MarketNest_UserStories_v2.pdf` | Features + acceptance criteria |
-| `MarketNest_UI_Designs.html` | Visual design reference |
+| `MarketNest.dc.html` (Claude Design project) | Mobile design source |
+| `MarketNest_UI_Designs.html` | Web visual design reference |
 | `docs/ARCHITECTURE_PRINCIPLES.md` | Extended principles |
+| `README.md` | Setup + everyday commands |
+| `docs/PHASES.md`, `docs/ENV.md`, `docs/SECRETS.md` | Historical phase log, env, secrets |
 
 ## Repo layout
 

@@ -177,3 +177,6 @@ export const pressScale = 0.97;
 export type ColorToken = keyof typeof colors;
 export type RadiusToken = keyof typeof radii;
 export type SpacingToken = keyof typeof spacing;
+
+/** Mobile app palette — green scale, forked from the coral web tokens above. */
+export * from './mobile';

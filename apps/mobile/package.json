@@ -11,6 +11,8 @@
     "lint": "echo ok"
   },
   "dependencies": {
+    "@expo-google-fonts/cormorant-garamond": "^0.4.1",
+    "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@marketnest/api-client": "*",
     "@marketnest/shared-types": "*",
@@ -18,6 +20,7 @@
     "expo": "~57.0.7",
     "expo-constants": "~57.0.6",
     "expo-dev-client": "~57.0.7",
+    "expo-font": "^57.0.1",
     "expo-glass-effect": "~57.0.1",
     "expo-haptics": "~57.0.1",
     "expo-image": "~57.0.1",
@@ -25,6 +28,7 @@
     "expo-linking": "~57.0.3",
     "expo-router": "~57.0.7",
     "expo-secure-store": "~57.0.1",
+    "expo-splash-screen": "^57.0.4",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.1",
     "react": "19.2.3",
@@ -32,7 +36,8 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-reanimated": "4.5.0",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2"
+    "react-native-screens": "4.25.2",
+    "react-native-svg": "^15.15.5"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

@@ -49,4 +49,14 @@ export class CheckoutBodyDto {
   @ApiProperty({ enum: PaymentMethod })
   @IsEnum(PaymentMethod)
   paymentMethod!: PaymentMethod;
+
+  /**
+   * Promo code to apply. Optional. Re-validated server-side at checkout — the
+   * cart screen's earlier quote is a preview, and trusting it would let a client
+   * apply a code that expired between preview and purchase.
+   */
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
 }

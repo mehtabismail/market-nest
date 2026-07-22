@@ -23,6 +23,10 @@ import { RedisModule } from './redis/redis.module';
 import { CacheModule } from './cache/cache.module';
 import { RateLimitModule } from './rate-limit/rate-limit.module';
 import { UploadModule } from './upload/upload.module';
+import { WishlistModule } from './wishlist/wishlist.module';
+import { BrandsModule } from './brands/brands.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { KycModule } from './kyc/kyc.module';
 
 @Module({
   imports: [
@@ -51,6 +55,10 @@ import { UploadModule } from './upload/upload.module';
     CatalogueModule,
     AdminModule,
     UploadModule,
+    WishlistModule,
+    BrandsModule,
+    CouponsModule,
+    KycModule,
   ],
 })
 export class AppModule implements NestModule {

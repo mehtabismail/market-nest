@@ -14,15 +14,25 @@ type ProductRow = Pick<
   | 'categoryId'
   | 'status'
   | 'ownerType'
-> & {
-  variants?: Pick<
-    ProductVariant,
-    'id' | 'name' | 'options' | 'priceDelta' | 'stockQty' | 'isDefault'
-  >[];
-};
+> &
+  Partial<Pick<Product, 'hue' | 'dealEndsAt'>> & {
+    variants?: Pick<
+      ProductVariant,
+      'id' | 'name' | 'options' | 'priceDelta' | 'stockQty' | 'isDefault'
+    >[];
+    /**
+     * Category and brand relations, when the caller included them.
+     *
+     * Both are catalogue metadata, not seller identity — a brand is who
+     * manufactured the item, never who is selling it — so surfacing them here
+     * does not weaken the anonymity guarantee this mapper exists to enforce.
+     */
+    category?: { name: string } | null;
+    brand?: { name: string } | null;
+  };
 
 /**
- * Maps DB product ? buyer-safe DTO. Never pass seller relation into this function.
+ * Maps DB product → buyer-safe DTO. Never pass seller relation into this function.
  */
 export function toBuyerProductDTO(product: ProductRow): BuyerProductDTO {
   const images = Array.isArray(product.images)
@@ -43,6 +53,10 @@ export function toBuyerProductDTO(product: ProductRow): BuyerProductDTO {
     categoryId: product.categoryId,
     status: product.status,
     isMarketNestOfficial: product.ownerType === 'platform_owned',
+    hue: product.hue ?? 160,
+    categoryName: product.category?.name ?? null,
+    brandName: product.brand?.name ?? null,
+    dealEndsAt: product.dealEndsAt ? product.dealEndsAt.toISOString() : null,
     variants: (product.variants ?? []).map((variant) => ({
       id: variant.id,
       name: variant.name,
@@ -58,9 +72,7 @@ export function toBuyerProductDTO(product: ProductRow): BuyerProductDTO {
 }
 
 export function toBuyerProductListItemDTO(product: ProductRow): BuyerProductListItemDTO {
-  const images = Array.isArray(product.images)
-    ? (product.images as string[])
-    : [];
+  const images = Array.isArray(product.images) ? (product.images as string[]) : [];
   const thumbnail = images[0] ?? null;
 
   return {
@@ -70,5 +82,9 @@ export function toBuyerProductListItemDTO(product: ProductRow): BuyerProductList
     comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
     thumbnail,
     isMarketNestOfficial: product.ownerType === 'platform_owned',
+    hue: product.hue ?? 160,
+    categoryName: product.category?.name ?? null,
+    brandName: product.brand?.name ?? null,
+    dealEndsAt: product.dealEndsAt ? product.dealEndsAt.toISOString() : null,
   };
 }

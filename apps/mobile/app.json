@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "marketnest",
-    "backgroundColor": "#0e0f11",
+    "backgroundColor": "#060d09",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.marketnest.app"
@@ -15,7 +15,7 @@
     "android": {
       "package": "com.marketnest.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0e0f11",
+        "backgroundColor": "#060d09",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

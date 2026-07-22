@@ -22,6 +22,13 @@ function mapFeatured(
         comparePrice: null,
         thumbnail: images[0] ?? null,
         isMarketNestOfficial: r.product.ownerType === 'platform_owned',
+        // Mobile-only presentation fields. The web grid renders real
+        // photography, so the generated-artwork hue and the mobile eyebrows are
+        // inert here — defaulted rather than plumbed through the web fetch.
+        hue: 160,
+        categoryName: null,
+        brandName: null,
+        dealEndsAt: null,
       };
     });
 }

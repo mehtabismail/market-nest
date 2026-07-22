@@ -30,6 +30,12 @@ const buildBuyerListSelect = (): Prisma.ProductSelect => ({
   categoryId: true,
   status: true,
   ownerType: true,
+  hue: true,
+  dealEndsAt: true,
+  // Category and brand names only. Explicitly NOT the seller relation — this
+  // select is the boundary that keeps store identity out of buyer responses.
+  category: { select: { name: true } },
+  brand: { select: { name: true } },
 });
 
 const buildBuyerDetailSelect = (): Prisma.ProductSelect => ({

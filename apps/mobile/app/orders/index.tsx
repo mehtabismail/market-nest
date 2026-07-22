@@ -1,94 +1,139 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { OrderSummaryDTO } from '@marketnest/shared-types';
-import { EmptyState, ErrorState, LoadingState } from '../../src/components/states';
+import { Icon } from '../../src/components/icon';
+import { PressableScale } from '../../src/components/pressable-scale';
+import { ScreenHeader } from '../../src/components/screen-header';
+import { useTheme } from '../../src/contexts/theme-context';
 import { useApi } from '../../src/hooks/use-api';
-import { useAuth } from '../../src/contexts/auth-context';
-import { colors, fontSize, formatPrice, radii, shadow, spacing, statusColors } from '../../src/theme';
-
-function statusColor(status: string): string {
-  return (statusColors as Record<string, string>)[status] ?? colors.textMuted;
-}
-
-function label(status: string): string {
-  return status.replaceAll('_', ' ');
-}
+import { font, formatPrice, orderProgress, radii, size } from '../../src/theme';
 
 export default function OrdersScreen() {
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { isAuthenticated, isBuyer, loading: authLoading } = useAuth();
-  const { data, loading, error, reload } = useApi<OrderSummaryDTO[]>(
-    isAuthenticated && isBuyer ? '/orders' : null,
-  );
+  const { data: orders, loading } = useApi<OrderSummaryDTO[]>('/orders');
 
-  if (authLoading) return <LoadingState />;
-
-  if (!isAuthenticated) {
-    return <EmptyState title="Sign in to view orders" message="Your order history lives here." />;
-  }
-
-  if (!isBuyer) {
-    return (
-      <EmptyState
-        title="Customer account required"
-        message="Order history is only available on customer accounts."
-      />
-    );
-  }
-
-  if (loading) return <LoadingState label="Loading your orders…" />;
-  if (error) return <ErrorState message={error} onRetry={reload} />;
-
-  const orders = data ?? [];
-
-  if (orders.length === 0) {
-    return <EmptyState title="No orders yet" message="Your purchases will appear here." />;
-  }
+  const list = orders ?? [];
 
   return (
-    <>
-      <Stack.Screen options={{ title: 'Your orders' }} />
-      <FlatList
-        data={orders}
-        keyExtractor={(order) => order.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <Pressable
-            style={[styles.card, shadow('sm')]}
-            onPress={() => router.push(`/orders/${item.id}`)}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.orderId}>#{item.id.slice(0, 8)}</Text>
-              <View style={[styles.pill, { backgroundColor: statusColor(item.status) }]}>
-                <Text style={styles.pillText}>{label(item.status)}</Text>
-              </View>
-            </View>
-            <Text style={styles.muted}>
-              {item.itemCount} {item.itemCount === 1 ? 'item' : 'items'} ·{' '}
-              {new Date(item.createdAt).toLocaleDateString()}
-            </Text>
-            <Text style={styles.total}>{formatPrice(item.total)}</Text>
-          </Pressable>
-        )}
+    <ScrollView
+      style={{ backgroundColor: theme.bg }}
+      contentContainerStyle={{ paddingTop: insets.top + 4, paddingBottom: insets.bottom + 40 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <ScreenHeader
+        title="My Orders"
+        subtitle={loading ? undefined : `${list.length} order${list.length === 1 ? '' : 's'}`}
+        back
+        backFallback="/account"
       />
-    </>
+
+      {!loading && list.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyGlyph}>📦</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>No orders yet</Text>
+          <Text style={[styles.emptyBody, { color: theme.textMuted }]}>
+            When you place an order it will show up here.
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.list}>
+          {list.map((order) => {
+            const progress = orderProgress(order.status);
+            const isTracking = progress.percent > 0 && progress.percent < 100;
+            return (
+              <PressableScale
+                key={order.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Order ${order.id.slice(0, 8)}, ${progress.stage}`}
+                onPress={() => router.push(`/orders/${order.id}` as never)}
+                style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+              >
+                <View style={styles.cardHead}>
+                  <Text style={[styles.orderId, { color: theme.text }]}>
+                    #{order.id.slice(0, 8).toUpperCase()}
+                  </Text>
+                  <Text style={[styles.orderDate, { color: theme.textMuted }]}>
+                    {formatDate(order.createdAt)}
+                  </Text>
+                </View>
+
+                <Text style={[styles.itemLine, { color: theme.textMuted }]}>
+                  {order.itemCount} item{order.itemCount === 1 ? '' : 's'}
+                </Text>
+
+                <View style={styles.statusRow}>
+                  <View style={[styles.statusPill, { backgroundColor: `${progress.color}18` }]}>
+                    <Text style={[styles.statusText, { color: progress.color }]}>{progress.stage}</Text>
+                  </View>
+                  <Text style={[styles.total, { color: theme.accent }]}>{formatPrice(order.total)}</Text>
+                </View>
+
+                <View style={[styles.track, { backgroundColor: theme.border }]}>
+                  <View
+                    style={[styles.trackFill, { width: `${progress.percent}%`, backgroundColor: progress.color }]}
+                  />
+                </View>
+
+                <View style={styles.trackMeta}>
+                  <Text style={[styles.trackStage, { color: theme.textFaint }]}>{progress.stage}</Text>
+                  {order.estimatedTo ? (
+                    <Text style={[styles.trackEta, { color: theme.textMuted }]}>
+                      ETA: {formatDate(order.estimatedTo)}
+                    </Text>
+                  ) : null}
+                </View>
+
+                {isTracking ? (
+                  <View style={[styles.trackButton, { borderColor: theme.accentGlow }]}>
+                    <Icon name="truck" size={14} color={theme.accent} />
+                    <Text style={[styles.trackButtonText, { color: theme.accent }]}>Track Live</Text>
+                  </View>
+                ) : null}
+              </PressableScale>
+            );
+          })}
+        </View>
+      )}
+    </ScrollView>
   );
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, gap: spacing.md },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+  empty: { alignItems: 'center', paddingHorizontal: 40, paddingVertical: 60 },
+  emptyGlyph: { fontSize: 56, marginBottom: 16, opacity: 0.35 },
+  emptyTitle: { fontSize: 18, fontFamily: font.display, marginBottom: 6 },
+  emptyBody: { fontSize: size.body, fontFamily: font.body, textAlign: 'center' },
+  list: { paddingHorizontal: 20, paddingTop: 8 },
+  card: { borderRadius: radii.tile, borderWidth: 1, padding: 14, marginBottom: 14 },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
+  orderId: { fontSize: size.small, fontFamily: font.bodyBold },
+  orderDate: { fontSize: size.caption, fontFamily: font.body },
+  itemLine: { fontSize: size.body, fontFamily: font.body, marginBottom: 8 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.chip },
+  statusText: { fontSize: size.caption, fontFamily: font.bodyBold },
+  total: { fontSize: size.base, fontFamily: font.bodyBold },
+  track: { height: 4, borderRadius: 4, overflow: 'hidden' },
+  trackFill: { height: '100%', borderRadius: 4 },
+  trackMeta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 },
+  trackStage: { fontSize: size.tiny, fontFamily: font.body },
+  trackEta: { fontSize: size.tiny, fontFamily: font.bodySemibold },
+  trackButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    borderRadius: radii.chip,
     borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  orderId: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
-  pill: { paddingHorizontal: spacing.md, paddingVertical: 3, borderRadius: radii.full },
-  pillText: { color: colors.white, fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  muted: { fontSize: fontSize.sm, color: colors.textMuted },
-  total: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginTop: spacing.xs },
+  trackButtonText: { fontSize: size.small, fontFamily: font.bodySemibold },
 });

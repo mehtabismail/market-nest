@@ -2,6 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { CartService } from '../cart/cart.service';
 import type { NotificationsService } from '../notifications/notifications.service';
+import type { NotificationFeedService } from '../notifications/notification-feed.service';
+import type { CouponsService } from '../coupons/coupons.service';
 import type { RequestUser } from '../auth/auth.types';
 import { OrdersService } from './orders.service';
 import type { CheckoutBodyDto } from './dto/checkout.dto';
@@ -36,13 +38,17 @@ function buildHarness() {
   } as unknown as CartService;
 
   const notifications = { enqueueEmail: jest.fn() } as unknown as NotificationsService;
+  const feed = { create: jest.fn() } as unknown as NotificationFeedService;
+  // No coupon in these cases, so quote/redeem are never reached — a bare stub
+  // keeps the constructor satisfied without modelling coupon behaviour here.
+  const coupons = { quote: jest.fn(), redeem: jest.fn() } as unknown as CouponsService;
 
   return {
     tx,
     prisma,
     cart,
     notifications,
-    service: new OrdersService(prisma, cart, notifications),
+    service: new OrdersService(prisma, cart, notifications, feed, coupons),
   };
 }
 

@@ -12,7 +12,9 @@ import { pressScale, spring } from '@marketnest/tokens';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface PressableScaleProps extends Omit<PressableProps, 'style'> {
-  children: ReactNode;
+  // Optional: some controls (a colour swatch, an icon-only chip) are a styled
+  // surface with no children of their own.
+  children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   /** Light impact by default. Pass `null` for silent controls. */
   haptic?: Haptics.ImpactFeedbackStyle | null;

@@ -16,7 +16,17 @@ export class CategoriesService {
       this.prisma.category.findMany({
         where: { isActive: true },
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-        select: { id: true, name: true, slug: true, parentId: true, imageUrl: true },
+        // `emoji` and `hue` generate the category artwork on mobile, which
+        // ships no photography — without them every tile renders identically.
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          parentId: true,
+          imageUrl: true,
+          emoji: true,
+          hue: true,
+        },
       }),
     );
   }

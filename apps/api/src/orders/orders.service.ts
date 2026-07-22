@@ -12,8 +12,13 @@ import type { RequestUser } from '../auth/auth.types';
 import { CheckoutBodyDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationFeedService } from '../notifications/notification-feed.service';
+import { CouponsService } from '../coupons/coupons.service';
 
 const SHIPPING_FEE = 5;
+/** Delivery window shown on the order tracker, in days from checkout. */
+const DELIVERY_MIN_DAYS = 3;
+const DELIVERY_MAX_DAYS = 6;
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +26,8 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly cart: CartService,
     private readonly notifications: NotificationsService,
+    private readonly feed: NotificationFeedService,
+    private readonly coupons: CouponsService,
   ) {}
 
   async checkout(
@@ -39,7 +46,23 @@ export class OrdersService {
 
     const subtotal = cart.subtotal;
     const shippingFee = SHIPPING_FEE;
-    const total = subtotal + shippingFee;
+
+    // Re-quote the coupon against the *server's* subtotal, not the client's.
+    // `quote` throws on an expired or below-minimum code, which correctly fails
+    // the checkout rather than silently charging full price.
+    let discount = 0;
+    let couponCode: string | null = null;
+    if (dto.couponCode?.trim()) {
+      const quote = await this.coupons.quote(dto.couponCode, subtotal);
+      discount = quote.discount;
+      couponCode = quote.code;
+    }
+
+    const total = Math.max(0, subtotal + shippingFee - discount);
+
+    const now = new Date();
+    const estimatedFrom = new Date(now.getTime() + DELIVERY_MIN_DAYS * 86_400_000);
+    const estimatedTo = new Date(now.getTime() + DELIVERY_MAX_DAYS * 86_400_000);
 
     const initialStatus =
       dto.paymentMethod === 'cod' ? 'pending_cod' : 'pending_payment';
@@ -52,10 +75,18 @@ export class OrdersService {
           paymentMethod: dto.paymentMethod,
           subtotal,
           shippingFee,
+          discount,
+          couponCode,
           total,
+          estimatedFrom,
+          estimatedTo,
           shippingAddress: dto.shippingAddress as unknown as Prisma.InputJsonValue,
         },
       });
+
+      // Redeem inside the transaction so the usage counter and the order that
+      // consumed it commit or roll back together.
+      if (couponCode) await this.coupons.redeem(couponCode, tx);
 
       for (const line of cart.items) {
         // Read inside the transaction: the previous version validated stock via
@@ -110,6 +141,13 @@ export class OrdersService {
     await this.cart.clearForCheckout(guestSession, user.id);
 
     void this.notifications.enqueueEmail('order_confirmation_buyer', { orderId: order.id });
+    void this.feed.create({
+      userId: user.id,
+      type: 'order_update',
+      title: 'Order confirmed',
+      body: `Your order is on its way. Total ${total.toFixed(2)}.`,
+      link: `/orders/${order.id}`,
+    });
 
     const sellerIds = [
       ...new Set(
@@ -340,7 +378,19 @@ export class OrdersService {
   }
 
   private toSummary(
-    order: { id: string; status: string; paymentMethod: string; subtotal: unknown; shippingFee: unknown; total: unknown; createdAt: Date },
+    order: {
+      id: string;
+      status: string;
+      paymentMethod: string;
+      subtotal: unknown;
+      shippingFee: unknown;
+      total: unknown;
+      createdAt: Date;
+      discount?: unknown;
+      couponCode?: string | null;
+      estimatedFrom?: Date | null;
+      estimatedTo?: Date | null;
+    },
     itemCount: number,
   ): OrderSummaryDTO {
     return {
@@ -349,9 +399,15 @@ export class OrdersService {
       paymentMethod: order.paymentMethod as OrderSummaryDTO['paymentMethod'],
       subtotal: Number(order.subtotal),
       shippingFee: Number(order.shippingFee),
+      // `?? 0` covers list queries that don't select the column and legacy rows
+      // created before discounts existed.
+      discount: order.discount != null ? Number(order.discount) : 0,
+      couponCode: order.couponCode ?? null,
       total: Number(order.total),
       createdAt: order.createdAt.toISOString(),
       itemCount,
+      estimatedFrom: order.estimatedFrom ? order.estimatedFrom.toISOString() : null,
+      estimatedTo: order.estimatedTo ? order.estimatedTo.toISOString() : null,
     };
   }
 
@@ -363,6 +419,10 @@ export class OrdersService {
     shippingFee: unknown;
     total: unknown;
     createdAt: Date;
+    discount?: unknown;
+    couponCode?: string | null;
+    estimatedFrom?: Date | null;
+    estimatedTo?: Date | null;
     shippingAddress: unknown;
     items: Array<{
       id: string;

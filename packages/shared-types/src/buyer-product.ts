@@ -1,5 +1,5 @@
 /**
- * Buyer-safe product shape ù NEVER include seller_id, store_name, store_slug, seller email.
+ * Buyer-safe product shape ÔøΩ NEVER include seller_id, store_name, store_slug, seller email.
  */
 export interface BuyerProductVariantDTO {
   id: string;
@@ -21,11 +21,23 @@ export interface BuyerProductDTO {
   images: string[];
   categoryId: string | null;
   status: string;
-  /** Only true for platform_owned ù drives "MarketNest Official" badge */
+  /** Only true for platform_owned ÔøΩ drives "MarketNest Official" badge */
   isMarketNestOfficial: boolean;
   variants: BuyerProductVariantDTO[];
   averageRating?: number;
   reviewCount?: number;
+  /**
+   * Hue (0ÔøΩ359) keying the generated artwork on mobile, which ships no
+   * photography. Safe to expose: it is a presentation attribute of the product,
+   * carrying nothing about who sells it.
+   */
+  hue: number;
+  /** Category display name, for the artwork glyph and the tile's eyebrow. */
+  categoryName: string | null;
+  /** Brand display name. Manufacturer, not seller ÔøΩ anonymity is unaffected. */
+  brandName: string | null;
+  /** Flash-deal expiry, or null when the product is not on a timed deal. */
+  dealEndsAt: string | null;
 }
 
 export interface BuyerProductListItemDTO {
@@ -37,4 +49,10 @@ export interface BuyerProductListItemDTO {
   isMarketNestOfficial: boolean;
   averageRating?: number | null;
   reviewCount?: number;
+  hue: number;
+  categoryName: string | null;
+  brandName: string | null;
+  dealEndsAt: string | null;
+  /** Set when the caller resolved the viewer's wishlist alongside the list. */
+  wishlisted?: boolean;
 }

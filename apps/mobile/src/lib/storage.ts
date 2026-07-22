@@ -15,6 +15,7 @@ import type { TokenStorage } from '@marketnest/api-client';
 
 const TOKEN_KEY = 'mn_token';
 const GUEST_KEY = 'mn_guest_session';
+const THEME_KEY = 'mn_theme';
 
 async function read(key: string): Promise<string | null> {
   try {
@@ -42,4 +43,16 @@ export const secureStorage: TokenStorage = {
   getGuestSession: () => read(GUEST_KEY),
   setGuestSession: (id) => SecureStore.setItemAsync(GUEST_KEY, id),
   clearGuestSession: () => remove(GUEST_KEY),
+};
+
+/**
+ * Non-secret UI preferences.
+ *
+ * These have no business being in the keychain, but they ride along with it
+ * anyway: SecureStore is already a dependency, and pulling in AsyncStorage for
+ * a single boolean would add a native module for no benefit.
+ */
+export const preferences = {
+  getTheme: () => read(THEME_KEY),
+  setTheme: (value: 'dark' | 'light') => SecureStore.setItemAsync(THEME_KEY, value),
 };

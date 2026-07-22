@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  BadgeCheck,
   BarChart3,
   Boxes,
   CircleDollarSign,
@@ -16,6 +17,8 @@ import {
   ShoppingBag,
   Star,
   Store,
+  Tag,
+  Tags,
   Truck,
   Users,
 } from 'lucide-react';
@@ -32,6 +35,9 @@ const nav = [
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/featured', label: 'Featured', icon: Star },
   { href: '/admin/categories', label: 'Categories', icon: ListOrdered },
+  { href: '/admin/brands', label: 'Brands', icon: Tags },
+  { href: '/admin/coupons', label: 'Coupons', icon: Tag },
+  { href: '/admin/kyc', label: 'KYC review', icon: BadgeCheck },
   { href: '/admin/banners', label: 'Banners', icon: Megaphone },
   { href: '/admin/payouts', label: 'Payouts', icon: CircleDollarSign },
   { href: '/admin/revenue', label: 'Revenue', icon: Boxes },
