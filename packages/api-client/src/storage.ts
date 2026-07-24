@@ -1,5 +1,5 @@
 /**
- * Where the session token and guest cart id live.
+ * Where the session tokens and guest cart id live.
  *
  * Deliberately async on every method: the web adapter wraps localStorage (sync)
  * while React Native uses expo-secure-store (async, Keychain/Keystore backed).
@@ -11,6 +11,10 @@ export interface TokenStorage {
   setToken(token: string): Promise<void>;
   clearToken(): Promise<void>;
 
+  getRefreshToken(): Promise<string | null>;
+  setRefreshToken(token: string): Promise<void>;
+  clearRefreshToken(): Promise<void>;
+
   getGuestSession(): Promise<string | null>;
   setGuestSession(sessionId: string): Promise<void>;
   clearGuestSession(): Promise<void>;
@@ -19,6 +23,7 @@ export interface TokenStorage {
 /** Non-persistent fallback, for tests and server-side rendering. */
 export function createMemoryStorage(): TokenStorage {
   let token: string | null = null;
+  let refresh: string | null = null;
   let guest: string | null = null;
 
   return {
@@ -28,6 +33,13 @@ export function createMemoryStorage(): TokenStorage {
     },
     clearToken: async () => {
       token = null;
+    },
+    getRefreshToken: async () => refresh,
+    setRefreshToken: async (value) => {
+      refresh = value;
+    },
+    clearRefreshToken: async () => {
+      refresh = null;
     },
     getGuestSession: async () => guest,
     setGuestSession: async (value) => {

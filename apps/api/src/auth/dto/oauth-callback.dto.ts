@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, ValidateIf } from 'class-validator';
+import { IsOptional, IsString, ValidateIf } from 'class-validator';
 
 export class OauthCallbackDto {
   @ApiProperty({
@@ -18,7 +18,21 @@ export class OauthCallbackDto {
   @IsString()
   accessToken?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  refresh_token?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  refreshToken?: string;
+
   get resolvedAccessToken(): string {
     return this.access_token ?? this.accessToken ?? '';
+  }
+
+  get resolvedRefreshToken(): string | null {
+    return this.refresh_token ?? this.refreshToken ?? null;
   }
 }

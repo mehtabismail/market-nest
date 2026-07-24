@@ -7,16 +7,18 @@ import { OrdersController, SellerOrdersController } from './orders.controller';
 /**
  * Locks the role boundaries on the order surface.
  *
- * Buyer routes must stay buyer-only: an admin who can place orders, read every
- * order and trigger payouts has no separation of duties, and admin-placed
- * orders would land in GMV/revenue analytics.
+ * Buyer routes are for customers — buyers and sellers both, since a seller is a
+ * buyer who also sells and keeps full shopping ability. The hard line is
+ * superadmin: an admin who can place orders, read every order and trigger
+ * payouts has no separation of duties, and admin-placed orders would land in
+ * GMV/revenue analytics.
  */
 describe('Order controller role boundaries', () => {
   const reflector = new Reflector();
   const rolesOn = (target: Type<unknown>) => reflector.get<UserRole[]>(ROLES_KEY, target);
 
-  it('restricts buyer order routes to buyers only', () => {
-    expect(rolesOn(OrdersController)).toEqual(['buyer']);
+  it('opens buyer order routes to customers (buyers and sellers)', () => {
+    expect(rolesOn(OrdersController)).toEqual(['buyer', 'seller']);
   });
 
   it('does not allow superadmin to transact as a customer', () => {

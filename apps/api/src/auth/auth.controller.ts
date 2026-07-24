@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
@@ -8,6 +8,7 @@ import type { RequestUser } from './auth.types';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { OauthCallbackDto } from './dto/oauth-callback.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SellerSetupPasswordDto } from './dto/seller-setup-password.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
@@ -29,6 +30,20 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Public()
+  @RateLimit('auth')
+  @Post('refresh')
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshSession(dto);
+  }
+
+  @Public()
+  @Post('logout')
+  logout(@Headers('authorization') authorization?: string) {
+    const accessToken = authorization?.replace(/^Bearer\s+/i, '').trim() || null;
+    return this.authService.logout(accessToken);
   }
 
   @Public()

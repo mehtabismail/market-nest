@@ -52,6 +52,7 @@ export function ProductCard({
         category={product.categoryName}
         isDark={isDark}
         glyphSize={isRail ? 52 : 42}
+        imageUrl={product.thumbnail}
         style={{ height: isRail ? 144 : 118 }}
       >
         {badge ? (

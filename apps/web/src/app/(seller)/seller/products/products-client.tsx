@@ -76,7 +76,10 @@ function FormTextarea({
 }
 
 export function SellerProductsClient() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const verified = Boolean(user?.seller?.isVerified);
+  const kycStatus = user?.seller?.kycStatus;
+  const rejectionReason = user?.seller?.rejectionReason;
   const [products, setProducts] = useState<SellerProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +126,10 @@ export function SellerProductsClient() {
   async function handleCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!token) return;
+    if (!verified) {
+      setError('Complete seller verification before creating products.');
+      return;
+    }
     const fd = new FormData(e.currentTarget);
     const imageUrl = String(fd.get('imageUrl') ?? '').trim();
     try {
@@ -256,7 +263,12 @@ export function SellerProductsClient() {
         <button
           type="button"
           className="btn btn-primary inline-flex items-center gap-2"
-          onClick={() => setShowForm(!showForm)}
+          disabled={!verified}
+          title={verified ? undefined : 'Complete verification before listing'}
+          onClick={() => {
+            if (!verified) return;
+            setShowForm(!showForm);
+          }}
         >
           <span className={`transition-transform ${showForm ? 'rotate-45' : ''}`}>
             <Plus className="h-4 w-4" />
@@ -264,6 +276,29 @@ export function SellerProductsClient() {
           {showForm ? 'Cancel' : 'Add product'}
         </button>
       </div>
+
+      {!verified && (
+        <div className="rounded-xl border border-mn-gold/30 bg-mn-cream p-4 text-sm text-mn-ink">
+          {kycStatus === 'submitted' ? (
+            <p>Your verification is pending admin review. Product listing unlocks after approval.</p>
+          ) : kycStatus === 'rejected' ? (
+            <p>
+              Verification was rejected
+              {rejectionReason ? `: ${rejectionReason}` : '.'}{' '}
+              <a href="/seller/kyc" className="font-semibold text-mn-teal underline">
+                Update and resubmit
+              </a>
+            </p>
+          ) : (
+            <p>
+              Complete seller verification before creating products.{' '}
+              <a href="/seller/kyc" className="font-semibold text-mn-teal underline">
+                Continue verification
+              </a>
+            </p>
+          )}
+        </div>
+      )}
 
       {successMessage && (
         <div className="animate-slide-up flex items-center gap-2 rounded-xl border border-mn-teal/20 bg-mn-teal-soft p-4 text-sm text-mn-teal">
@@ -281,7 +316,7 @@ export function SellerProductsClient() {
         </div>
       )}
 
-      {showForm && (
+      {showForm && verified && (
         <form
           onSubmit={handleCreate}
           className="card animate-slide-up max-w-xl space-y-4 overflow-hidden rounded-xl border border-mn-teal/20 bg-white/95 p-6"

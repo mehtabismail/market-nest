@@ -37,8 +37,8 @@ See [.env.example](../.env.example) for the full list with `[api]` / `[web]` tag
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API → `anon` public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → API → `service_role` secret |
-| `DATABASE_URL` | Supabase → Database → URI (pooler, port **6543**) |
-| `DIRECT_URL` | Supabase → Database → URI (direct, port **5432**) |
+| `DATABASE_URL` | Supabase → Database → pooler URI, Session mode port **5432** (+ `connection_limit=5`) |
+| `DIRECT_URL` | Same pooler host, Session mode port **5432** (not `db.<ref>.supabase.co`) |
 | `REDIS_URL` | Local install — `redis://127.0.0.1:6379` |
 
 #### A note on `REDIS_URL`

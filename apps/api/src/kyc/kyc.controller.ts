@@ -22,6 +22,12 @@ class SaveStepDto {
   payload!: Record<string, unknown>;
 }
 
+class StartOnboardingDto {
+  @IsOptional()
+  @IsString()
+  storeName?: string;
+}
+
 class DecisionDto {
   @IsIn(['approve', 'reject'])
   decision!: 'approve' | 'reject';
@@ -36,6 +42,15 @@ class DecisionDto {
 @Controller()
 export class KycController {
   constructor(private readonly kyc: KycService) {}
+
+  // A buyer starts here — this is the one seller route reachable without the
+  // seller role, because it is what grants that role. Superadmins are excluded:
+  // they operate the platform, they do not open storefronts.
+  @Roles('buyer', 'seller')
+  @Post('seller/onboarding')
+  startOnboarding(@CurrentUser() user: RequestUser, @Body() dto: StartOnboardingDto) {
+    return this.kyc.startOnboarding(user.id, dto.storeName);
+  }
 
   @Roles('seller')
   @Get('seller/kyc')

@@ -196,7 +196,7 @@ npm run dev -w @marketnest/web      # web only, port 3000
 | Portal | URL | Sign in as |
 |---|---|---|
 | **Buyer / shop** | <http://localhost:3000/shop> | a `buyer` account — self-register at `/shop/signup` |
-| **Seller** | <http://localhost:3000/seller> | a `seller` account — created by admin invite, not self-service |
+| **Seller** | <http://localhost:3000/seller> | a `seller` account — self-serve at `/seller/signup` **or** admin invite |
 | **Super admin** | <http://localhost:3000/admin> | your `superadmin` account |
 | **API** | <http://localhost:3001/api/v1> | — |
 | **Swagger** | <http://localhost:3001/api/docs> | — |
@@ -204,12 +204,16 @@ npm run dev -w @marketnest/web      # web only, port 3000
 Roles are enforced by the API, not just the UI. A buyer calling an admin endpoint
 directly gets a 403 regardless of what the frontend shows.
 
-Sellers cannot self-register by design: sign in as admin → **Sellers** → invite,
-which emails a link that lets them set a password.
+**Sellers:** self-serve signup + KYC (`/seller/signup`) or admin invite → set
+password → KYC. Listing products requires `isVerified`. Invitees who complete KYC
+are auto-approved; self-serve KYC waits in `/admin/kyc`. Mobile uses the same
+rules via Seller Central / Plus tab.
 
 ### Mobile app
 
-The mobile app talks to the **same API**, so start that first.
+The mobile app talks to the **same API**, so start that first. Status of what is
+live vs still open: [MOBILE_IMPLEMENTATION_LOG.md](MOBILE_IMPLEMENTATION_LOG.md)
+and [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md).
 
 ```bash
 # Terminal 1 — API

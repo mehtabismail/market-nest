@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import type { BuyerProductDTO } from '@marketnest/shared-types';
 import { Icon } from '../../src/components/icon';
 import { PressableScale } from '../../src/components/pressable-scale';
 import { ProductArt } from '../../src/components/product-tile';
+import { useAuth } from '../../src/contexts/auth-context';
 import { useCart } from '../../src/contexts/cart-context';
 import { useTheme } from '../../src/contexts/theme-context';
 import { useApi } from '../../src/hooks/use-api';
@@ -42,25 +43,37 @@ export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { add } = useCart();
   const wishlist = useWishlist();
+  const { user } = useAuth();
 
   const { data: product } = useApi<BuyerProductDTO>(id ? `/products/${id}` : null, [id]);
   const { data: reviews } = useApi<ReviewResponse>(id ? `/reviews/product/${id}` : null, [id]);
+  const { data: eligibility } = useApi<{ canReview: boolean } | null>(
+    id && user ? `/reviews/eligibility/${id}` : null,
+    [id, user?.id],
+  );
 
   const [variantIndex, setVariantIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
 
   const liked = product ? wishlist.has(product.id) : false;
+  const isOwnListing = Boolean(product?.isOwnListing);
+  const canReview = Boolean(eligibility?.canReview);
 
-  // Swatch colours come off variant options where present, else the design's
-  // neutral set — so a product without colour variants still shows the row
-  // rather than an empty gap.
-  const swatches = useMemo(() => {
-    const fromVariants = (product?.variants ?? [])
-      .map((v) => v.options?.color)
-      .filter((c): c is string => Boolean(c));
-    return fromVariants.length > 0 ? fromVariants : ['#1a1a1a', '#e2e2e2', '#1e3a5f', '#2d5a2d'];
-  }, [product]);
+  const variants = product?.variants ?? [];
+  const hasColorVariants = variants.length > 0 && variants.every((v) => v.options?.color);
+  const selectedVariant = variants[variantIndex];
+  const displayPrice = product
+    ? product.price + (selectedVariant?.priceDelta ?? 0)
+    : 0;
+
+  async function handleShare() {
+    if (!product) return;
+    await Share.share({
+      message: `Check out ${product.title} on MarketNest`,
+      url: `marketnest://product/${id}`,
+    });
+  }
 
   if (!product) {
     return <View style={[styles.loading, { backgroundColor: theme.bg }]} />;
@@ -92,6 +105,7 @@ export default function ProductScreen() {
           category={product.categoryName}
           isDark={isDark}
           glyphSize={108}
+          imageUrl={product.images?.[0] ?? null}
           style={styles.hero}
         >
           <LinearGradient
@@ -110,17 +124,24 @@ export default function ProductScreen() {
               <Icon name="back" size={18} color="#ffffff" />
             </PressableScale>
             <View style={styles.heroActionsRight}>
-              <PressableScale accessibilityRole="button" accessibilityLabel="Share" style={styles.circleButton}>
-                <Icon name="share" size={16} color="#ffffff" />
-              </PressableScale>
               <PressableScale
                 accessibilityRole="button"
-                accessibilityLabel={liked ? 'Remove from wishlist' : 'Save to wishlist'}
-                onPress={() => wishlist.toggle(product.id)}
+                accessibilityLabel="Share"
+                onPress={() => void handleShare()}
                 style={styles.circleButton}
               >
-                <Icon name={liked ? 'heartFilled' : 'heart'} size={16} color={liked ? accents.like : '#ffffff'} />
+                <Icon name="share" size={16} color="#ffffff" />
               </PressableScale>
+              {!isOwnListing ? (
+                <PressableScale
+                  accessibilityRole="button"
+                  accessibilityLabel={liked ? 'Remove from wishlist' : 'Save to wishlist'}
+                  onPress={() => wishlist.toggle(product.id)}
+                  style={styles.circleButton}
+                >
+                  <Icon name={liked ? 'heartFilled' : 'heart'} size={16} color={liked ? accents.like : '#ffffff'} />
+                </PressableScale>
+              ) : null}
             </View>
           </View>
         </ProductArt>
@@ -154,7 +175,7 @@ export default function ProductScreen() {
           ) : null}
 
           <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: theme.accent }]}>{formatPrice(product.price)}</Text>
+            <Text style={[styles.price, { color: theme.accent }]}>{formatPrice(displayPrice)}</Text>
             {product.comparePrice && product.comparePrice > product.price ? (
               <Text style={[styles.comparePrice, { color: theme.textFaint }]}>
                 {formatPrice(product.comparePrice)}
@@ -167,26 +188,82 @@ export default function ProductScreen() {
             ) : null}
           </View>
 
-          {/* Colour swatches */}
-          <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Color</Text>
-          <View style={styles.swatchRow}>
-            {swatches.map((color, index) => {
-              const selected = variantIndex === index;
-              return (
-                <PressableScale
-                  key={`${color}-${index}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Colour option ${index + 1}`}
-                  accessibilityState={{ selected }}
-                  onPress={() => setVariantIndex(index)}
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: color, borderColor: selected ? theme.accent : 'transparent' },
-                  ]}
-                />
-              );
-            })}
-          </View>
+          {/* Variants */}
+          {variants.length > 0 ? (
+            <>
+              <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+                {hasColorVariants ? 'Color' : 'Options'}
+              </Text>
+              {hasColorVariants ? (
+                <View style={styles.swatchRow}>
+                  {variants.map((variant, index) => {
+                    const selected = variantIndex === index;
+                    const outOfStock = (variant.stockQty ?? 0) <= 0;
+                    return (
+                      <PressableScale
+                        key={variant.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={variant.name || `Option ${index + 1}`}
+                        accessibilityState={{ selected, disabled: outOfStock }}
+                        disabled={outOfStock}
+                        onPress={() => setVariantIndex(index)}
+                        style={[
+                          styles.swatch,
+                          {
+                            backgroundColor: variant.options?.color ?? theme.textFaint,
+                            borderColor: selected ? theme.accent : 'transparent',
+                            opacity: outOfStock ? 0.4 : 1,
+                          },
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={styles.variantList}>
+                  {variants.map((variant, index) => {
+                    const selected = variantIndex === index;
+                    const outOfStock = (variant.stockQty ?? 0) <= 0;
+                    return (
+                      <PressableScale
+                        key={variant.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={variant.name || `Option ${index + 1}`}
+                        accessibilityState={{ selected, disabled: outOfStock }}
+                        disabled={outOfStock}
+                        onPress={() => setVariantIndex(index)}
+                        style={[
+                          styles.variantChip,
+                          {
+                            backgroundColor: selected ? theme.accent : theme.card,
+                            borderColor: selected ? theme.accent : theme.border,
+                            opacity: outOfStock ? 0.5 : 1,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.variantChipText,
+                            { color: selected ? '#ffffff' : theme.text },
+                          ]}
+                        >
+                          {variant.name}
+                          {variant.priceDelta && variant.priceDelta !== 0
+                            ? ` (+${formatPrice(variant.priceDelta)})`
+                            : ''}
+                        </Text>
+                        {outOfStock ? (
+                          <Text style={[styles.variantOos, { color: selected ? '#ffffff99' : theme.textFaint }]}>
+                            Out of stock
+                          </Text>
+                        ) : null}
+                      </PressableScale>
+                    );
+                  })}
+                </View>
+              )}
+            </>
+          ) : null}
 
           {/* Quantity */}
           <View style={styles.qtyRow}>
@@ -279,10 +356,27 @@ export default function ProductScreen() {
               ))}
             </View>
           ) : null}
+
+          {/* Write a review — only when eligibility API says the buyer received this product. */}
+          {canReview ? (
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Write a review"
+              onPress={() =>
+                router.push(
+                  `/review/write?productId=${id}${product?.title ? `&title=${encodeURIComponent(product.title)}` : ''}` as never,
+                )
+              }
+              style={[styles.writeReviewButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+            >
+              <Icon name="edit" size={16} color={theme.accent} />
+              <Text style={[styles.writeReviewText, { color: theme.accent }]}>Write a Review</Text>
+            </PressableScale>
+          ) : null}
         </View>
       </ScrollView>
 
-      {/* Sticky CTA */}
+      {/* Sticky CTA — owners manage the listing; buyers purchase. */}
       <View
         style={[
           styles.cta,
@@ -293,43 +387,63 @@ export default function ProductScreen() {
           },
         ]}
       >
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel={liked ? 'Remove from wishlist' : 'Save to wishlist'}
-          onPress={() => wishlist.toggle(product.id)}
-          style={[
-            styles.wishButton,
-            {
-              backgroundColor: liked ? 'rgba(244,63,94,0.1)' : theme.card,
-              borderColor: liked ? accents.like : theme.border,
-            },
-          ]}
-        >
-          <Icon name={liked ? 'heartFilled' : 'heart'} size={20} color={liked ? accents.like : theme.textMuted} />
-        </PressableScale>
+        {isOwnListing ? (
+          <>
+            <View style={[styles.ownBanner, { backgroundColor: theme.accentWash, borderColor: theme.accentGlow }]}>
+              <Text style={[styles.ownBannerText, { color: theme.accent }]}>Your listing</Text>
+            </View>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Edit listing"
+              onPress={() => router.push(`/seller/edit-product?id=${product.id}` as never)}
+              style={[styles.flex, glow(theme, 20)]}
+            >
+              <LinearGradient colors={ctaGradient(isDark)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyButton}>
+                <Text style={styles.buyText}>Edit listing</Text>
+              </LinearGradient>
+            </PressableScale>
+          </>
+        ) : (
+          <>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel={liked ? 'Remove from wishlist' : 'Save to wishlist'}
+              onPress={() => wishlist.toggle(product.id)}
+              style={[
+                styles.wishButton,
+                {
+                  backgroundColor: liked ? 'rgba(244,63,94,0.1)' : theme.card,
+                  borderColor: liked ? accents.like : theme.border,
+                },
+              ]}
+            >
+              <Icon name={liked ? 'heartFilled' : 'heart'} size={20} color={liked ? accents.like : theme.textMuted} />
+            </PressableScale>
 
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Add to cart"
-          disabled={adding}
-          onPress={() => void handleAdd(false)}
-          style={[styles.addButton, { backgroundColor: theme.card, borderColor: theme.border }]}
-        >
-          <Icon name="bag" size={17} color={theme.accent} />
-          <Text style={[styles.addText, { color: theme.accent }]}>Add to Cart</Text>
-        </PressableScale>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Add to cart"
+              disabled={adding}
+              onPress={() => void handleAdd(false)}
+              style={[styles.addButton, { backgroundColor: theme.card, borderColor: theme.border }]}
+            >
+              <Icon name="bag" size={17} color={theme.accent} />
+              <Text style={[styles.addText, { color: theme.accent }]}>Add to Cart</Text>
+            </PressableScale>
 
-        <PressableScale
-          accessibilityRole="button"
-          accessibilityLabel="Buy now"
-          disabled={adding}
-          onPress={() => void handleAdd(true)}
-          style={[styles.flex, glow(theme, 20)]}
-        >
-          <LinearGradient colors={ctaGradient(isDark)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyButton}>
-            <Text style={styles.buyText}>Buy Now</Text>
-          </LinearGradient>
-        </PressableScale>
+            <PressableScale
+              accessibilityRole="button"
+              accessibilityLabel="Buy now"
+              disabled={adding}
+              onPress={() => void handleAdd(true)}
+              style={[styles.flex, glow(theme, 20)]}
+            >
+              <LinearGradient colors={ctaGradient(isDark)} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.buyButton}>
+                <Text style={styles.buyText}>Buy Now</Text>
+              </LinearGradient>
+            </PressableScale>
+          </>
+        )}
       </View>
     </View>
   );
@@ -404,8 +518,17 @@ const styles = StyleSheet.create({
   },
   discountText: { fontSize: size.caption, fontFamily: font.bodyBold, color: accents.sale },
   fieldLabel: { fontSize: size.small, fontFamily: font.bodySemibold, marginBottom: 10 },
-  swatchRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  swatchRow: { flexDirection: 'row', gap: 10, marginBottom: 20, flexWrap: 'wrap' },
   swatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 2.5 },
+  variantList: { flexDirection: 'row', gap: 10, marginBottom: 20, flexWrap: 'wrap' },
+  variantChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radii.chip,
+    borderWidth: 1,
+  },
+  variantChipText: { fontSize: size.small, fontFamily: font.bodySemibold },
+  variantOos: { fontSize: size.tiny, fontFamily: font.body, marginTop: 2 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   stepper: { flexDirection: 'row', alignItems: 'center', borderRadius: radii.input, borderWidth: 1, overflow: 'hidden' },
   stepperButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -434,6 +557,17 @@ const styles = StyleSheet.create({
   reviewDate: { fontSize: size.tiny, fontFamily: font.body },
   reviewStars: { flexDirection: 'row', gap: 2 },
   reviewBody: { fontSize: size.small, fontFamily: font.body, lineHeight: size.small * 1.65 },
+  writeReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 14,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  writeReviewText: { fontSize: size.body, fontFamily: font.bodySemibold },
   cta: {
     position: 'absolute',
     left: 0,
@@ -469,4 +603,11 @@ const styles = StyleSheet.create({
   addText: { fontSize: size.base, fontFamily: font.bodyBold },
   buyButton: { height: 52, borderRadius: radii.card, alignItems: 'center', justifyContent: 'center' },
   buyText: { fontSize: size.base, fontFamily: font.bodyBold, color: '#ffffff' },
+  ownBanner: {
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderRadius: radii.card,
+    borderWidth: 1,
+  },
+  ownBannerText: { fontSize: size.small, fontFamily: font.bodySemibold },
 });

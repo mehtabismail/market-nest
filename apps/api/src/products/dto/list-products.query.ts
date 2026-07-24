@@ -1,7 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductOwnerType } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class ListProductsQuery {
   @ApiPropertyOptional({ default: 1 })
@@ -35,6 +46,25 @@ export class ListProductsQuery {
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   semantic?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  @ApiPropertyOptional({ enum: ['newest', 'price_asc', 'price_desc'] })
+  @IsOptional()
+  @IsIn(['newest', 'price_asc', 'price_desc'])
+  sort?: 'newest' | 'price_asc' | 'price_desc';
 
   /** Admin list filter */
   @ApiPropertyOptional({ enum: ProductOwnerType })

@@ -107,8 +107,12 @@ function SetPasswordForm() {
         method: 'POST',
         body: JSON.stringify({ accessToken, password }),
       });
-      await setSession(session.accessToken);
-      router.push('/seller');
+      await setSession({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
+      // Invitees still complete KYC; submit auto-verifies because createdBy is set.
+      router.push('/seller/kyc');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not set password';
       if (message.toLowerCase().includes('invalid or expired token')) {

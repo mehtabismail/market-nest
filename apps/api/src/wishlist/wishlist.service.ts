@@ -1,5 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+/** First image URL from the product's `images` JSON, or null. */
+function firstImage(images: Prisma.JsonValue): string | null {
+  if (Array.isArray(images) && typeof images[0] === 'string') return images[0];
+  return null;
+}
 
 @Injectable()
 export class WishlistService {
@@ -25,22 +32,28 @@ export class WishlistService {
             images: true,
             hue: true,
             status: true,
+            sellerId: true,
             category: { select: { name: true } },
           },
         },
       },
     });
 
-    // A product archived after being saved stays in the table — silently
-    // dropping the row would delete the buyer's data on their behalf — but it
-    // is not shown, because it can no longer be bought.
+    const seller = await this.prisma.seller.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
+
+    // Drop archived + own listings (a seller should never see their own product saved).
     return items
       .filter((item) => item.product.status === 'published')
+      .filter((item) => !seller || item.product.sellerId !== seller.id)
       .map((item) => ({
         id: item.product.id,
         title: item.product.title,
         price: Number(item.product.price),
         comparePrice: item.product.comparePrice ? Number(item.product.comparePrice) : null,
+        thumbnail: firstImage(item.product.images),
         hue: item.product.hue,
         category: item.product.category?.name ?? null,
         savedAt: item.createdAt,
@@ -60,12 +73,15 @@ export class WishlistService {
    * Idempotent add. A double-tap on the heart must not 500 on the unique
    * constraint, so the conflict is absorbed rather than surfaced.
    */
-  async add(userId: string, productId: string) {
+  async add(userId: string, productId: string, sellerId?: string) {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, status: 'published' },
-      select: { id: true },
+      select: { id: true, sellerId: true },
     });
     if (!product) throw new NotFoundException('Product not found');
+    if (sellerId && product.sellerId === sellerId) {
+      throw new BadRequestException('You cannot save your own listing');
+    }
 
     await this.prisma.wishlistItem.upsert({
       where: { userId_productId: { userId, productId } },
@@ -82,11 +98,11 @@ export class WishlistService {
     return { productId, wishlisted: false };
   }
 
-  async toggle(userId: string, productId: string) {
+  async toggle(userId: string, productId: string, sellerId?: string) {
     const existing = await this.prisma.wishlistItem.findUnique({
       where: { userId_productId: { userId, productId } },
       select: { id: true },
     });
-    return existing ? this.remove(userId, productId) : this.add(userId, productId);
+    return existing ? this.remove(userId, productId) : this.add(userId, productId, sellerId);
   }
 }

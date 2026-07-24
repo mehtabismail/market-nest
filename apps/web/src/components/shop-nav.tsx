@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, Package, Search, User } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Home, LogOut, Package, Search, User } from 'lucide-react';
 import { CartLink } from '@/components/cart-link';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -15,7 +16,19 @@ const links = [
 
 export function ShopNav() {
   const pathname = usePathname();
-  const { isAuthenticated, user, loading } = useAuth();
+  const router = useRouter();
+  const { isAuthenticated, user, loading, logout } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await logout();
+      router.push('/shop');
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   return (
     <div className="sticky top-14 z-40 border-b border-mn-border bg-mn-paper/95 backdrop-blur-md">
@@ -52,17 +65,29 @@ export function ShopNav() {
             </>
           )}
           {!loading && isAuthenticated && (
-            <Link
-              href="/shop/account"
-              className="flex items-center gap-2 text-sm font-semibold text-mn-ink"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-mn-teal-soft text-mn-teal">
-                <User className="h-3.5 w-3.5" />
-              </span>
-              <span className="hidden max-w-[120px] truncate sm:inline">
-                {user?.fullName ?? 'Account'}
-              </span>
-            </Link>
+            <>
+              <Link
+                href="/shop/account"
+                className="flex items-center gap-2 text-sm font-semibold text-mn-ink"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-mn-teal-soft text-mn-teal">
+                  <User className="h-3.5 w-3.5" />
+                </span>
+                <span className="hidden max-w-[120px] truncate sm:inline">
+                  {user?.fullName ?? 'Account'}
+                </span>
+              </Link>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-mn-mid transition-colors hover:text-mn-ink"
+                disabled={signingOut}
+                onClick={() => void handleSignOut()}
+                aria-label="Sign out"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{signingOut ? 'Signing out…' : 'Sign out'}</span>
+              </button>
+            </>
           )}
           <CartLink />
         </div>

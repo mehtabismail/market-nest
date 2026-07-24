@@ -38,16 +38,26 @@ function AuthCompleteInner() {
         }
 
         const accessToken = data.session?.access_token;
+        const refreshToken = data.session?.refresh_token;
         if (!accessToken) {
           throw new Error('Could not complete Google sign in. Please try again.');
         }
 
-        const session = await apiFetch<{ accessToken: string }>('/auth/oauth/callback', {
-          method: 'POST',
-          body: JSON.stringify({ access_token: accessToken }),
-        });
+        const session = await apiFetch<{ accessToken: string; refreshToken?: string }>(
+          '/auth/oauth/callback',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            }),
+          },
+        );
 
-        await setSession(session.accessToken);
+        await setSession({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? refreshToken,
+        });
         await ensureGuestSession();
         await mergeGuestCart(session.accessToken);
         router.replace(next.startsWith('/') ? next : '/shop');

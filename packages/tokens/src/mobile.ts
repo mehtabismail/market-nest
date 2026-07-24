@@ -97,8 +97,8 @@ export const mobileStatusColors = {
   shipped: '#3b82f6',
   inTransit: '#3b82f6',
   delivered: '#22c55e',
-  cancelled: '#6b7280',
-  refunded: '#6b7280',
+  cancelled: '#ef4444',
+  refunded: '#f97316',
 } as const;
 
 /** Ratings gold and sale red — fixed across both themes. */

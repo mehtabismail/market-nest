@@ -93,7 +93,9 @@ export function glow(theme: MobileTheme, radius = 24) {
 }
 
 export function formatPrice(value: number): string {
-  return `$${value.toFixed(2)}`;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '$0.00';
+  return `$${n.toFixed(2)}`;
 }
 
 /** Whole-dollar form for tiles and hero cards, where cents are noise. */
@@ -144,8 +146,9 @@ export function orderProgress(status: string): OrderProgress {
     case 'processing':
       return { percent: 35, stage: 'Packed', color: statusColors.packed };
     case 'cancelled':
+      return { percent: 0, stage: 'Cancelled', color: statusColors.cancelled };
     case 'refunded':
-      return { percent: 0, stage: status === 'refunded' ? 'Refunded' : 'Cancelled', color: statusColors.cancelled };
+      return { percent: 0, stage: 'Refunded', color: statusColors.refunded };
     default:
       // pending_cod, pending_payment, confirmed
       return { percent: 15, stage: 'Confirmed', color: statusColors.confirmed };

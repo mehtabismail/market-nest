@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  BadgeCheck,
   BarChart3,
   LayoutDashboard,
   LogOut,
@@ -13,10 +14,12 @@ import {
 } from 'lucide-react';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { PortalShell } from '@/components/portal-shell';
+import { SellerNotificationBell } from '@/components/seller/seller-notification-bell';
 import { useAuth } from '@/contexts/auth-context';
 
 const nav = [
   { href: '/seller', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/seller/kyc', label: 'Verification', icon: BadgeCheck },
   { href: '/seller/products', label: 'Products', icon: Package },
   { href: '/seller/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/seller/inventory', label: 'Inventory', icon: Warehouse },
@@ -24,7 +27,7 @@ const nav = [
   { href: '/seller/earnings', label: 'Earnings', icon: Wallet },
 ];
 
-const PUBLIC_PATHS = ['/seller/login', '/seller/set-password'];
+const PUBLIC_PATHS = ['/seller/login', '/seller/set-password', '/seller/signup'];
 
 export function SellerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,12 +55,13 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mn-teal text-sm font-bold text-white">
                 {initial}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-semibold text-mn-ink">
                   {user?.seller?.storeName ?? user?.fullName ?? 'Seller'}
                 </div>
                 <div className="text-[10px] text-mn-mid">Seller Portal</div>
               </div>
+              <SellerNotificationBell />
             </div>
             <nav className="flex flex-col gap-1">
               {nav.map((item) => {
@@ -96,16 +100,19 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
                   <p className="text-[10px] uppercase tracking-wide text-mn-mid">Seller Portal</p>
                   <p className="text-sm font-semibold text-mn-teal">{activeNavItem?.label ?? 'Dashboard'}</p>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline"
-                  onClick={() => {
-                    logout();
-                    router.push('/seller/login');
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <SellerNotificationBell />
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                      logout();
+                      router.push('/seller/login');
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
                 {nav.map((item) => {

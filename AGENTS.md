@@ -19,6 +19,8 @@ The six context files below are the source of truth and override your defaults. 
 |------|---------|
 | `MarketNest.dc.html` (Claude Design project) | Mobile design source |
 | `MarketNest_UI_Designs.html` | Web visual design reference |
+| `MOBILE_IMPLEMENTATION_LOG.md` | What shipped for mobile + supporting API/web |
+| `MOBILE_REMAINING_FEATURES.md` | What is still open (dep-gated + polish) |
 | `docs/ARCHITECTURE_PRINCIPLES.md` | Extended principles |
 | `README.md` | Setup + everyday commands |
 | `docs/PHASES.md`, `docs/ENV.md`, `docs/SECRETS.md` | Historical phase log, env, secrets |
@@ -26,16 +28,28 @@ The six context files below are the source of truth and override your defaults. 
 ## Repo layout
 
 ```
-apps/web     ? Next.js 14 (buyer)/(seller)/(admin) route groups
-apps/api     ? NestJS gateway
-packages/*   ? shared-types, ui, utils
-supabase/    ? SQL migrations + seed
+apps/web     — Next.js 14 (buyer)/(seller)/(admin) route groups
+apps/api     — NestJS gateway
+apps/mobile  — Expo SDK 57 buyer + seller surfaces
+packages/*   — shared-types, api-client, utils, tokens, ui
+supabase/    — SQL migrations + seed
 ```
 
-## Phase 2 status ? core commerce
+## Post–Phase 7 — Mobile + seller lifecycle (2026-07-22 → 07-24)
 
-- Products, categories, Redis cart, orders, Stripe/COD, seller invite
-- Web: `/shop`, cart, checkout, seller portal, admin sellers
+Feature-complete web/API (P7) plus a large mobile and seller-web pass. **Detail:** [MOBILE_IMPLEMENTATION_LOG.md](MOBILE_IMPLEMENTATION_LOG.md). **Still open:** [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md).
+
+Shipped highlights:
+
+- Expo green design system; wishlist, brands, coupons, KYC, in-app notifications
+- Self-serve seller onboarding + live KYC (mobile + seller web); listing gated on `isVerified`; invite path auto-verifies on KYC submit
+- Buyer mobile commerce loop (filters, semantic search, COD checkout, addresses, orders cancel/reorder, rewards, reviews eligibility, assistant)
+- Seller mobile: dashboard, orders, payouts, add/edit product + variants
+- Access + refresh token auth across API, mobile, web; buyer web logout
+- Own listings excluded from catalogue for the owning seller; order status rollup buyer↔seller
+- Session pooler DB URLs for Nest (avoid `db.*.supabase.co` / transaction `:6543` for the API process)
+
+Deferred (need dependency approval): mobile Stripe native, Google/Apple on mobile, device push.
 
 ## Phase 7 status — feature complete
 
@@ -68,7 +82,12 @@ supabase/    ? SQL migrations + seed
 - Web: product reviews, seller earnings, admin analytics + audit log, shop featured section
 - Migration: `supabase/migrations/20260605000000_phase3_banners_payouts.sql`
 
-## Phase 1 status ? complete (scaffold)
+## Phase 2 status — core commerce
+
+- Products, categories, Redis cart, orders, Stripe/COD, seller invite
+- Web: `/shop`, cart, checkout, seller portal, admin sellers
+
+## Phase 1 status — complete (scaffold)
 
 - [x] Turborepo + npm workspaces
 - [x] Supabase migration + seed (MarketNest Official)

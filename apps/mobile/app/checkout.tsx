@@ -14,9 +14,8 @@ import { useApi } from '../src/hooks/use-api';
 import { api } from '../src/lib/api';
 import { ctaGradient, font, formatPrice, glow, radii, size } from '../src/theme';
 
-const SHIPPING_FEE = 9.99;
-
 interface SavedAddress {
+  id?: string;
   label: string;
   fullName: string;
   phone: string;
@@ -30,8 +29,8 @@ interface SavedAddress {
 
 const PAYMENT_METHODS = [
   { key: 'cod', glyph: '💵', title: 'Cash on Delivery', meta: 'Pay when it arrives', method: 'cod' as const },
-  { key: 'card', glyph: '💳', title: 'Credit / Debit Card', meta: '•••• 4242', method: 'online' as const },
-  { key: 'apple', glyph: '🍎', title: 'Apple Pay', meta: 'One tap checkout', method: 'online' as const },
+  { key: 'card', glyph: '💳', title: 'Credit / Debit Card', meta: 'Coming soon', method: 'online' as const, disabled: true },
+  { key: 'apple', glyph: '🍎', title: 'Apple Pay', meta: 'Coming soon', method: 'online' as const, disabled: true },
 ] as const;
 
 const STEPS = ['Cart', 'Address', 'Payment', 'Done'];
@@ -55,7 +54,8 @@ export default function CheckoutScreen() {
   const [placedOrder, setPlacedOrder] = useState<OrderDetailDTO | null>(null);
 
   const subtotal = cart?.subtotal ?? 0;
-  const total = useMemo(() => Math.max(0, subtotal + SHIPPING_FEE), [subtotal]);
+  const shippingFee = cart?.shippingFee ?? 0;
+  const total = useMemo(() => Math.max(0, subtotal + shippingFee), [subtotal, shippingFee]);
 
   async function placeOrder() {
     const address = addresses[addressIndex];
@@ -205,7 +205,7 @@ export default function CheckoutScreen() {
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Add new address"
-            onPress={() => router.push('/account' as never)}
+            onPress={() => router.push('/addresses' as never)}
             style={[styles.addAddress, { borderColor: theme.border }]}
           >
             <Icon name="plus" size={15} color={theme.textMuted} />
@@ -224,15 +224,21 @@ export default function CheckoutScreen() {
 
           {PAYMENT_METHODS.map((method, index) => {
             const selected = paymentIndex === index;
+            const disabled = 'disabled' in method && method.disabled;
             return (
               <PressableScale
                 key={method.key}
                 accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setPaymentIndex(index)}
+                accessibilityState={{ selected, disabled }}
+                disabled={disabled}
+                onPress={() => !disabled && setPaymentIndex(index)}
                 style={[
                   styles.paymentCard,
-                  { backgroundColor: theme.card, borderColor: selected ? theme.accent : theme.border },
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: selected ? theme.accent : theme.border,
+                    opacity: disabled ? 0.5 : 1,
+                  },
                 ]}
               >
                 <Text style={styles.paymentGlyph}>{method.glyph}</Text>
@@ -240,7 +246,7 @@ export default function CheckoutScreen() {
                   <Text style={[styles.paymentTitle, { color: theme.text }]}>{method.title}</Text>
                   <Text style={[styles.paymentMeta, { color: theme.textMuted }]}>{method.meta}</Text>
                 </View>
-                {selected ? <Icon name="check" size={16} color={theme.accent} /> : null}
+                {selected && !disabled ? <Icon name="check" size={16} color={theme.accent} /> : null}
               </PressableScale>
             );
           })}

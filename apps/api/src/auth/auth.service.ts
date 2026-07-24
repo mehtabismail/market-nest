@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SupabaseService } from './supabase.service';
 import { AuthPortal, LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { SellerSetupPasswordDto } from './dto/seller-setup-password.dto';
 import { OauthCallbackDto } from './dto/oauth-callback.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -31,19 +32,33 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    let profile = await this.prisma.profile.findUnique({
-      where: { id: data.user.id },
-      include: { seller: { select: { id: true, isActive: true, status: true } } },
-    });
+    let profile = await this.prisma.withRetry(
+      () =>
+        this.prisma.profile.findUnique({
+          where: { id: data.user.id },
+          include: { seller: { select: { id: true, isActive: true, status: true } } },
+        }),
+      'auth.login profile',
+    );
 
     if (!profile) {
       profile = await this.claimSellerInvite(data.user.id, data.user.email ?? dto.email);
     }
 
+    // Auth user exists but profile was never written (e.g. a previous register
+    // failed after createUser). Heal by creating a buyer profile so they are
+    // not stuck behind "Profile not found".
     if (!profile) {
-      throw new BadRequestException(
-        'Profile not found. Register as a buyer or use your seller invite.',
-      );
+      profile = await this.prisma.profile.create({
+        data: {
+          id: data.user.id,
+          role: 'buyer',
+          fullName:
+            this.readStringMetadata(data.user.user_metadata, 'full_name') ??
+            this.readStringMetadata(data.user.user_metadata, 'name'),
+        },
+        include: { seller: { select: { id: true, isActive: true, status: true } } },
+      });
     }
 
     if (
@@ -71,13 +86,32 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<AuthSession> {
-    const { data, error } = await this.supabase.getClient().auth.signUp({
-      email: dto.email,
+    const email = dto.email.trim().toLowerCase();
+
+    // Server-side registration must use the Admin API. `auth.signUp` (even with
+    // the service role) can return a synthetic user with an empty `identities`
+    // array when the email is already taken — that id is never written to
+    // `auth.users`, so the profile upsert then fails `profiles_id_fkey`.
+    const { data, error } = await this.supabase.getClient().auth.admin.createUser({
+      email,
       password: dto.password,
+      // Confirm immediately so mobile can sign in without a mailbox round-trip.
+      // Projects that want the confirm-email dance can flip this via env later.
+      email_confirm: true,
+      user_metadata: {
+        ...(dto.fullName ? { full_name: dto.fullName } : {}),
+        ...(dto.phone ? { phone: dto.phone } : {}),
+      },
     });
 
     if (error || !data.user) {
-      throw new BadRequestException(error?.message ?? 'Registration failed');
+      const message = error?.message ?? 'Registration failed';
+      if (/already|registered|exists/i.test(message)) {
+        throw new BadRequestException(
+          'An account with this email already exists. Please sign in.',
+        );
+      }
+      throw new BadRequestException(message);
     }
 
     const profile = await this.prisma.profile.upsert({
@@ -86,20 +120,32 @@ export class AuthService {
         id: data.user.id,
         role: 'buyer',
         fullName: dto.fullName ?? null,
+        phone: dto.phone ?? null,
       },
-      update: {},
+      update: {
+        // A retry after a partial failure should still land the name/phone the
+        // buyer just typed, without changing role.
+        ...(dto.fullName ? { fullName: dto.fullName } : {}),
+        ...(dto.phone ? { phone: dto.phone } : {}),
+      },
     });
 
-    if (!data.session) {
-      throw new BadRequestException('Check your email to confirm your account');
+    const { data: signInData, error: signInError } = await this.supabase
+      .getClient()
+      .auth.signInWithPassword({ email, password: dto.password });
+
+    if (signInError || !signInData.session) {
+      throw new BadRequestException(
+        signInError?.message ?? 'Account created. Please sign in.',
+      );
     }
 
     return {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
+      accessToken: signInData.session.access_token,
+      refreshToken: signInData.session.refresh_token,
       user: {
         id: data.user.id,
-        email: dto.email,
+        email,
         role: profile.role as AuthSession['user']['role'],
         fullName: profile.fullName,
       },
@@ -137,6 +183,9 @@ export class AuthService {
 
     return {
       accessToken,
+      ...(dto.resolvedRefreshToken
+        ? { refreshToken: dto.resolvedRefreshToken }
+        : {}),
       user: {
         id: data.user.id,
         email,
@@ -144,6 +193,61 @@ export class AuthService {
         fullName: profile.fullName,
       },
     };
+  }
+
+  /**
+   * Exchange a Supabase refresh token for a fresh access + refresh pair.
+   * Clients call this when `/auth/me` (or any Bearer route) returns 401.
+   */
+  async refreshSession(dto: RefreshTokenDto): Promise<AuthSession> {
+    const { data, error } = await this.supabase.getClient().auth.refreshSession({
+      refresh_token: dto.refreshToken,
+    });
+
+    if (error || !data.session || !data.user) {
+      throw new UnauthorizedException('Session expired. Please sign in again.');
+    }
+
+    const profile = await this.prisma.profile.findUnique({
+      where: { id: data.user.id },
+      select: { role: true, fullName: true },
+    });
+
+    if (!profile) {
+      throw new UnauthorizedException('Profile not found');
+    }
+
+    return {
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+      user: {
+        id: data.user.id,
+        email: data.user.email ?? '',
+        role: profile.role as AuthSession['user']['role'],
+        fullName: profile.fullName,
+      },
+    };
+  }
+
+  /**
+   * Revoke the user's Supabase sessions (global). Clients still clear local
+   * storage even if revocation fails — logout must always succeed locally.
+   */
+  async logout(accessToken?: string | null) {
+    if (!accessToken) {
+      return { ok: true };
+    }
+
+    try {
+      const { data } = await this.supabase.getClient().auth.getUser(accessToken);
+      if (data.user?.id) {
+        await this.supabase.getClient().auth.admin.signOut(data.user.id, 'global');
+      }
+    } catch {
+      // Best-effort revoke — never block client logout on network/admin errors.
+    }
+
+    return { ok: true };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -221,6 +325,7 @@ export class AuthService {
 
     return {
       accessToken: signInData.session.access_token,
+      refreshToken: signInData.session.refresh_token,
       user: {
         id: data.user.id,
         email,
@@ -233,7 +338,18 @@ export class AuthService {
   async getMe(userId: string) {
     const profile = await this.prisma.profile.findUnique({
       where: { id: userId },
-      include: { seller: { select: { id: true, storeName: true, storeSlug: true } } },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            storeName: true,
+            storeSlug: true,
+            isVerified: true,
+            status: true,
+            kyc: { select: { status: true, rejectionReason: true } },
+          },
+        },
+      },
     });
 
     if (!profile) {
@@ -247,7 +363,17 @@ export class AuthService {
       fullName: profile.fullName,
       phone: profile.phone,
       avatarUrl: profile.avatarUrl,
-      seller: profile.seller,
+      seller: profile.seller
+        ? {
+            id: profile.seller.id,
+            storeName: profile.seller.storeName,
+            storeSlug: profile.seller.storeSlug,
+            isVerified: profile.seller.isVerified,
+            status: profile.seller.status,
+            kycStatus: profile.seller.kyc?.status ?? null,
+            rejectionReason: profile.seller.kyc?.rejectionReason ?? null,
+          }
+        : null,
     };
   }
 
@@ -256,24 +382,15 @@ export class AuthService {
       throw new BadRequestException('At least one field is required');
     }
 
-    const profile = await this.prisma.profile.update({
+    await this.prisma.profile.update({
       where: { id: userId },
       data: {
         ...(dto.fullName !== undefined ? { fullName: dto.fullName } : {}),
         ...(dto.phone !== undefined ? { phone: dto.phone } : {}),
       },
-      include: { seller: { select: { id: true, storeName: true, storeSlug: true } } },
     });
 
-    return {
-      id: profile.id,
-      email: null,
-      role: profile.role,
-      fullName: profile.fullName,
-      phone: profile.phone,
-      avatarUrl: profile.avatarUrl,
-      seller: profile.seller,
-    };
+    return this.getMe(userId);
   }
 
   private assertPortalAccess(portal: AuthPortal | undefined, role: string) {
@@ -314,9 +431,17 @@ export class AuthService {
       },
     });
 
+    // Invited sellers still complete the KYC wizard; `createdBy` is what makes
+    // submit auto-approve. Stay `onboarding` + unverified until then.
     await this.prisma.seller.update({
       where: { id: seller.id },
-      data: { userId, status: 'active', isActive: true },
+      data: { userId, status: 'onboarding', isActive: true, isVerified: false },
+    });
+
+    await this.prisma.sellerKyc.upsert({
+      where: { sellerId: seller.id },
+      create: { sellerId: seller.id },
+      update: {},
     });
 
     return this.prisma.profile.findUnique({

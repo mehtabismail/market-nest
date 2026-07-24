@@ -2,7 +2,7 @@
 
 > One of six context files. Read order: **[PRD](PRD.md) → [Architecture](Architecture.md) → [Rules](Rules.md) → [Phases](Phases.md) → [Design](Design.md) → [Memory](Memory.md)**.
 
-_Last updated: 2026-07-22._ Full historical detail: [`docs/PHASES.md`](docs/PHASES.md).
+_Last updated: 2026-07-24._ Full historical detail: [`docs/PHASES.md`](docs/PHASES.md). Mobile detail: [MOBILE_IMPLEMENTATION_LOG.md](MOBILE_IMPLEMENTATION_LOG.md) · open work: [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md).
 
 ---
 
@@ -23,27 +23,30 @@ When a task is ambiguous or spans many areas, propose the phase breakdown and co
 
 ## Delivered (high level)
 
-- **P1 Scaffold** — Turborepo, Supabase schema + RLS + seed, Prisma, NestJS auth/RBAC/health, `BuyerProductDTO` anonymity mapper, Next.js portal shells, design tokens, CI.
-- **P2 Core commerce** — products, categories, Redis cart, orders, Stripe/COD, seller invite; web `/shop`, cart, checkout, seller portal, admin sellers.
-- **P3 Admin/notifications/reviews/payouts** — audit logs, BullMQ email queue, reviews, seller earnings/payouts, analytics CSV, banners/featured.
-- **P4 AI search & assistant** — pgvector semantic search, OpenAI embeddings queue, buyer assistant chat.
-- **P5 Performance & beta** — Redis rate limits, catalogue cache, beta checklist, health bench.
-- **P6 Portal completion** — buyer orders/account, seller order detail/inventory/analytics, admin orders/fulfilment/products/categories/banners/payouts/seller CRUD.
-- **P7 Feature complete** — image upload (Supabase Storage), product variants, Google OAuth, checkout success, order polling, admin users/revenue/featured, async analytics export, RLS + storage migrations.
-- **Mobile hardening** — Expo app, secure token storage, native glass chrome (earlier iteration).
+- **P1–P7** — Scaffold through feature-complete web/API (see [docs/PHASES.md](docs/PHASES.md)).
+- **Mobile design (2026-07-22)** — Green Expo app; wishlist/brands/coupons/KYC/notification feed APIs; admin brands/coupons/KYC.
+- **Seller lifecycle + listings + images (2026-07-23)** — Self-serve onboarding, live KYC, add/list products, hybrid images.
+- **Mobile remaining-features pass (2026-07-23)** — Filters, semantic search, COD loop, addresses, profile/settings, rewards, reviews, assistant, seller dashboard/orders/payouts/edit+variants.
+- **Cross-portal polish (2026-07-23/24)** — Refresh-token auth (API+mobile+web), buyer web logout, seller web KYC sync, listing gate, notification deep links, own-listing exclusion, order status sync, session-pooler DB URLs.
 
-## Current phase — Mobile design implementation (2026-07-22)
+## Current phase — Close remaining dependency-gated items
 
-Implemented the Claude Design `MarketNest.dc.html` (green editorial) end-to-end. See [Memory.md](Memory.md) for the file-level detail. Summary:
+Most product surface area for mobile + seller web is **live**. Open work is tracked in [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md):
 
-- **Done:** forked green mobile token scale; all 13 mobile screens rebuilt; new backend (wishlist, brands, coupons, KYC, in-app notification feed) + product/order/seller/category columns; migration + demo seed applied to the hosted DB; admin web pages for brands, coupons, KYC review. All packages typecheck; 30 API tests pass; lint clean.
-- **Deferred ("wire later"), the next phase:**
-  1. **Mobile Seller Central + KYC → live data.** Both screens are pixel-faithful UI on representative data today. The API exists (`/seller/kyc`, `/seller/orders`, `/seller/earnings`). Blocker to design first: a signed-in buyer does not yet hold the `seller` role, so becoming a seller needs an onboarding/role-transition step before the wizard can submit for real.
-  2. **Seller portal (web) surfacing of KYC status** for the seller's own application.
-  3. Optional: migrate the **web** portals to the green brand (currently coral) — only if the user asks; it repaints all web pages.
+1. Mobile Stripe card checkout (`@stripe/stripe-react-native` — approval).
+2. Mobile Google/Apple OAuth (`expo-auth-session` — approval).
+3. Device push (`expo-notifications` + token storage — approval).
+4. Stored payment methods; universal links; empty/error polish.
+
+**Do not** treat “wire Seller Central / KYC / listings” as open — those shipped.
+
+## Previous — Seller onboarding + KYC/listings + images (2026-07-23)
+
+- Self-serve `POST /seller/onboarding` (PRD invite-only exception); sellers still shop; live KYC; Add Product + Listings; hybrid images; `expo-image-picker`.
+- Follow-ons (now done): live seller dashboard/orders/payouts/edit; seller web KYC; refresh auth; catalogue own-listing rules.
 
 ## Backlog / not started
 
-- Real seller onboarding flow (buyer → seller role transition).
-- Payment methods storage (the "Visa •4242" in the design is presentational).
-- Push notifications (the in-app feed exists; device push does not).
+- Payment methods storage (presentational card row removed / unwired).
+- Device push (in-app feed exists).
+- Mobile native Stripe + social OAuth (web has Stripe Elements + Google OAuth).

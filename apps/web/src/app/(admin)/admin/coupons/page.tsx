@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { DateTimeInput } from '@/components/form-fields';
 import { apiFetch } from '@/lib/api';
 import { TableSkeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
@@ -124,10 +125,9 @@ export default function AdminCouponsPage() {
         <input className="input" name="maxDiscount" type="number" step="0.01" placeholder="Max discount (optional)" />
         <input className="input" name="usageLimit" type="number" placeholder="Usage limit (optional)" />
         <input className="input md:col-span-2" name="description" placeholder="Description" />
-        <label className="text-xs text-gray md:col-span-2">
-          Ends at (optional)
-          <input className="input mt-1" name="endsAt" type="datetime-local" />
-        </label>
+        <div className="md:col-span-2">
+          <DateTimeInput name="endsAt" label="Ends at (optional)" className="input mt-1" />
+        </div>
         <button type="submit" className="btn btn-purple md:col-span-2">
           Create coupon
         </button>

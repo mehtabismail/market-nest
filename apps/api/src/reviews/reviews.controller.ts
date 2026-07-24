@@ -19,14 +19,21 @@ export class ReviewsController {
   }
 
   @ApiBearerAuth()
-  @Roles('buyer')
+  @Roles('buyer', 'seller')
+  @Get('eligibility/:productId')
+  eligibility(@CurrentUser() user: RequestUser, @Param('productId') productId: string) {
+    return this.reviews.eligibility(user.id, productId);
+  }
+
+  @ApiBearerAuth()
+  @Roles('buyer', 'seller')
   @Get('reviewable')
   reviewable(@CurrentUser() user: RequestUser) {
     return this.reviews.reviewableProducts(user.id);
   }
 
   @ApiBearerAuth()
-  @Roles('buyer')
+  @Roles('buyer', 'seller')
   @Post()
   create(@CurrentUser() user: RequestUser, @Body() dto: CreateReviewDto) {
     return this.reviews.create(user.id, dto.productId, dto.rating, dto.body);

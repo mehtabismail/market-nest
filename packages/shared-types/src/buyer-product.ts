@@ -38,6 +38,12 @@ export interface BuyerProductDTO {
   brandName: string | null;
   /** Flash-deal expiry, or null when the product is not on a timed deal. */
   dealEndsAt: string | null;
+  /**
+   * True when the authenticated viewer owns this listing.
+   * Safe to expose: it reveals nothing about *who* the seller is to other buyers,
+   * only that "this is yours" to the owner (so the app can hide buy/cart/wishlist).
+   */
+  isOwnListing?: boolean;
 }
 
 export interface BuyerProductListItemDTO {

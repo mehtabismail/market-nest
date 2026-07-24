@@ -1,18 +1,94 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { OrderDetailDTO } from '@marketnest/shared-types';
+import { ApiError } from '@marketnest/api-client';
 import { Icon } from '../../src/components/icon';
+import { PressableScale } from '../../src/components/pressable-scale';
 import { ScreenHeader } from '../../src/components/screen-header';
+import { useCart } from '../../src/contexts/cart-context';
 import { useTheme } from '../../src/contexts/theme-context';
 import { useApi } from '../../src/hooks/use-api';
+import { api } from '../../src/lib/api';
 import { ORDER_STAGES, font, formatPrice, orderProgress, radii, size } from '../../src/theme';
 
 export default function OrderDetailScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: order } = useApi<OrderDetailDTO>(id ? `/orders/${id}` : null, [id]);
+  const { data: order, reload } = useApi<OrderDetailDTO>(id ? `/orders/${id}` : null, [id]);
+  const { add } = useCart();
+
+  const [cancelling, setCancelling] = useState(false);
+  const [reordering, setReordering] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const canCancel = order?.status === 'pending_cod' || order?.status === 'pending_payment';
+  const isShipped = order?.status === 'shipped';
+
+  useEffect(() => {
+    if (isShipped && id) {
+      setLastRefreshed(new Date());
+      pollRef.current = setInterval(() => {
+        void reload();
+        setLastRefreshed(new Date());
+      }, 15000);
+    }
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [isShipped, id, reload]);
+
+  async function handleCancel() {
+    if (!order) return;
+    Alert.alert('Cancel Order', 'Are you sure you want to cancel this order?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Yes, Cancel',
+        style: 'destructive',
+        onPress: async () => {
+          setCancelling(true);
+          try {
+            await api.request(`/orders/${order.id}/cancel`, { method: 'POST' });
+            await reload();
+          } catch (err) {
+            Alert.alert(
+              'Error',
+              err instanceof ApiError || err instanceof Error
+                ? err.message
+                : 'Could not cancel order.',
+            );
+          } finally {
+            setCancelling(false);
+          }
+        },
+      },
+    ]);
+  }
+
+  async function handleReorder() {
+    if (!order) return;
+    setReordering(true);
+    try {
+      for (const item of order.items) {
+        await add(item.productId, item.quantity);
+      }
+      router.push('/cart' as never);
+    } catch (err) {
+      Alert.alert(
+        'Error',
+        err instanceof ApiError || err instanceof Error ? err.message : 'Could not reorder.',
+      );
+    } finally {
+      setReordering(false);
+    }
+  }
 
   if (!order) {
     return <View style={[styles.loading, { backgroundColor: theme.bg }]} />;
@@ -20,6 +96,7 @@ export default function OrderDetailScreen() {
 
   const progress = orderProgress(order.status);
   const reachedIndex = Math.round((progress.percent / 100) * (ORDER_STAGES.length - 1));
+  const isCancelled = order.status === 'cancelled' || order.status === 'refunded';
 
   return (
     <ScrollView
@@ -33,8 +110,22 @@ export default function OrderDetailScreen() {
         back
         backFallback="/orders"
         right={
-          <View style={[styles.headerPill, { backgroundColor: `${progress.color}18` }]}>
-            <Text style={[styles.headerPillText, { color: progress.color }]}>{progress.stage}</Text>
+          <View
+            style={[
+              styles.headerPill,
+              isCancelled
+                ? { backgroundColor: progress.color }
+                : { backgroundColor: `${progress.color}18` },
+            ]}
+          >
+            <Text
+              style={[
+                styles.headerPillText,
+                { color: isCancelled ? '#ffffff' : progress.color },
+              ]}
+            >
+              {progress.stage}
+            </Text>
           </View>
         }
       />
@@ -150,6 +241,50 @@ export default function OrderDetailScreen() {
             .join(', ')}
         </Text>
       </View>
+
+      {/* Tracking info for shipped orders */}
+      {isShipped && lastRefreshed ? (
+        <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.trackRow}>
+            <Icon name="truck" size={16} color={theme.accent} />
+            <Text style={[styles.trackText, { color: theme.text }]}>Tracking active</Text>
+            <Text style={[styles.trackMeta, { color: theme.textMuted }]}>
+              Updated {lastRefreshed.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Action buttons */}
+      <View style={styles.actions}>
+        {canCancel ? (
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="Cancel order"
+            disabled={cancelling}
+            onPress={() => void handleCancel()}
+            style={[styles.actionButton, { backgroundColor: theme.card, borderColor: theme.border, opacity: cancelling ? 0.6 : 1 }]}
+          >
+            <Icon name="x" size={16} color="#ef4444" />
+            <Text style={[styles.actionText, { color: '#ef4444' }]}>
+              {cancelling ? 'Cancelling…' : 'Cancel Order'}
+            </Text>
+          </PressableScale>
+        ) : null}
+
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="Reorder items"
+          disabled={reordering}
+          onPress={() => void handleReorder()}
+          style={[styles.actionButton, { backgroundColor: theme.accent, opacity: reordering ? 0.6 : 1 }]}
+        >
+          <Icon name="bag" size={16} color="#ffffff" />
+          <Text style={[styles.actionText, { color: '#ffffff' }]}>
+            {reordering ? 'Adding…' : 'Reorder'}
+          </Text>
+        </PressableScale>
+      </View>
     </ScrollView>
   );
 }
@@ -208,4 +343,19 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 17, fontFamily: font.bodyBold },
   addressName: { fontSize: size.body, fontFamily: font.bodySemibold, marginBottom: 2 },
   addressBody: { fontSize: size.small, fontFamily: font.body, lineHeight: size.small * 1.6 },
+  trackRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  trackText: { fontSize: size.body, fontFamily: font.bodySemibold, flex: 1 },
+  trackMeta: { fontSize: size.caption, fontFamily: font.body },
+  actions: { paddingHorizontal: 20, marginTop: 14, flexDirection: 'row', gap: 12 },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  actionText: { fontSize: size.body, fontFamily: font.bodyBold },
 });

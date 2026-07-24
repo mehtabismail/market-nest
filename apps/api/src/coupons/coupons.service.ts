@@ -88,6 +88,53 @@ export class CouponsService {
     });
   }
 
+  /**
+   * Active, currently-valid coupons a buyer can browse.
+   *
+   * Deliberately excludes exhausted / inactive / not-yet-started codes so the
+   * Rewards screen cannot leak unpublished promotions. Redemption still goes
+   * through `quote`, which re-checks every rule at apply time.
+   */
+  listPublic() {
+    const now = new Date();
+    return this.prisma.coupon
+      .findMany({
+        where: {
+          isActive: true,
+          AND: [
+            { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+            { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          code: true,
+          description: true,
+          type: true,
+          value: true,
+          minSubtotal: true,
+          maxDiscount: true,
+          endsAt: true,
+          usageLimit: true,
+          usedCount: true,
+        },
+      })
+      .then((rows) =>
+        rows
+          .filter((c) => c.usageLimit === null || c.usedCount < c.usageLimit)
+          .map(({ usageLimit: _u, usedCount: _c, type, value, minSubtotal, maxDiscount, ...rest }) => ({
+            ...rest,
+            // Stable client field names — mobile Rewards screen expects these.
+            discountType: type as 'percentage' | 'fixed',
+            discountValue: Number(value),
+            minSubtotal: minSubtotal != null ? Number(minSubtotal) : null,
+            maxDiscount: maxDiscount != null ? Number(maxDiscount) : null,
+            endsAt: rest.endsAt ? rest.endsAt.toISOString() : null,
+          })),
+      );
+  }
+
   list() {
     return this.prisma.coupon.findMany({ orderBy: { createdAt: 'desc' } });
   }

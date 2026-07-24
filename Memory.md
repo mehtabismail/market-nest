@@ -4,7 +4,7 @@
 >
 > **This is the running state of the project.** Update it at the end of every work session: what you finished, what's mid-flight, what's deferred. Keep it short and current — stale memory is worse than none.
 
-_Last updated: 2026-07-22._
+_Last updated: 2026-07-24._
 
 ---
 
@@ -12,54 +12,33 @@ _Last updated: 2026-07-22._
 
 - Nothing in-flight.
 
-## Just completed — App icon + animated splash (2026-07-22)
+## Docs sync (2026-07-24)
 
-Implemented `MarketNest-Splash.dc.html` (the "Nest Mark" brand identity).
+Refreshed [MOBILE_IMPLEMENTATION_LOG.md](MOBILE_IMPLEMENTATION_LOG.md) (done) and [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md) (only open / dep-gated). Also [Phases.md](Phases.md), [AGENTS.md](AGENTS.md), [docs/PHASES.md](docs/PHASES.md), [README.md](README.md) seller onboarding note.
 
-- **Icons** — regenerated all `apps/mobile/assets` PNGs from the design's SVG (3 arcs + emerald orb): `icon.png` (opaque iOS), `android-icon-{foreground,background,monochrome}.png`, `splash-icon.png`, `favicon.png`. Rasterised with a scratchpad-only `sharp` (never added to project deps). Generator kept at scratchpad `gen-icons.mjs`.
-- **Native splash bridge** — `expo-splash-screen` config plugin in `app.json`: transparent `splash-native.png` over `#030906`, so the native splash shows only the dark canvas and the animated sequence builds up from black (a visible mark would flash then redraw).
-- **Animated splash** — `apps/mobile/src/components/animated-splash.tsx`, a 1:1 port of the design sequence (bg fade, drifting blobs, rising particles, scanline texture, expanding rings, pulsing halo, self-drawing arcs via strokeDashoffset, orb back-out pop, title reveal with letter-spacing tighten, tagline, loading dots, progress sweep), then fades out ~5.2s and reveals the app. Built with react-native-svg + Reanimated; honours Reduce Motion. Mounted as an overlay in `app/_layout.tsx` over the (already-warm) app.
-- Verified: full monorepo typechecks; `npx expo export --platform ios` bundles clean (no import/worklet errors).
-- **Native changes need a rebuild** — the icon and native splash config only take effect after `npx expo prebuild --clean` + `expo run:ios`/`run:android` (or a new EAS build), NOT in Expo Go or hot reload. The `AnimatedSplash` component itself is JS and hot-reloads.
-- The design's Gaussian blur-in on icon/title has no cheap RN equivalent → expressed as an opacity ramp; the motion is intact.
+## Just completed — DB pooler flakiness fix (2026-07-23)
 
-## Just completed — Tab bar label layout (2026-07-22)
+Intermittent `Can't reach database server` / slow login 500s.
 
-- Fixed bottom tabs in `apps/mobile/app/(tabs)/_layout.tsx`: TabTrigger's injected `flexDirection: 'row'` was placing labels beside icons. Forced `tabStack` (`flexDirection: 'column'`) after injected styles so labels sit under icons.
+**Fixes:** Session pooler `:5432` for Nest `DATABASE_URL` + `DIRECT_URL` (not `db.*.supabase.co`, not transaction `:6543` for the API process); `PrismaService.withRetry`; OptionalJwt uses profile cache. Cold RTT to ap-south-1 can still be ~0.5–2s.
 
-## Just completed — Mobile design (`MarketNest.dc.html`)
+## Just completed — Cross-portal product pass (2026-07-23)
 
-**Tokens** — forked green mobile scale in `packages/tokens/src/mobile.ts` (both themes, oklch→hex converter, category glyphs). Web coral tokens untouched.
+Summarised in the implementation log. Highlights: refresh-token auth (API+mobile+web) + buyer web logout; seller hub / own-listing exclusion; variants on add; review eligibility; order status sync + red cancelled badges; rewards coupon shape; seller web KYC sync; notification deep links; PK phone/email + date pickers; KYC base64 upload.
 
-**Mobile screens rebuilt** (`apps/mobile/app/`): Home, Search, Product, Cart, Checkout (3-step + success), Orders list, Order detail (`orders/[id]`), Profile (`(tabs)/account`), Seller Central (`seller`), KYC (`kyc`), Sign-in, Sign-up, Notifications, Wishlist. Plus tab bar with pulsing FAB (`(tabs)/_layout`), `ProductArt`, `ProductCard`, `SectionHeading`, `ScreenHeader`, `Icon` set, theme context (persisted light/dark), cart + wishlist contexts. Removed dead `glass.tsx`/`states.tsx`/`fade-in.tsx`.
+## Deferred — pick up next
 
-**Backend** (`apps/api/src/`): new modules `wishlist`, `brands`, `coupons`, `kyc`, and `notifications/notification-feed.*` (in-app feed alongside the email queue). New Prisma models `Brand`, `WishlistItem`, `Coupon`, `Notification`, `SellerKyc`; new columns on `Product` (hue, brandId, deal window, viewCount), `Order` (discount, couponCode, estimates), `Seller` (ratingAvg, salesCount, isVerified), `Category` (emoji, hue). Checkout re-validates coupons server-side and writes an in-app confirmation.
+See [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md) and [Phases.md](Phases.md):
 
-**Shared types** — `BuyerProduct*DTO` gained `hue`, `categoryName`, `brandName`, `dealEndsAt`; `Order*DTO` gained `discount`, `couponCode`, `estimatedFrom/To`.
+1. Mobile Stripe card checkout (`@stripe/stripe-react-native` — dep approval).
+2. Mobile Google/Apple OAuth (`expo-auth-session` — dep approval).
+3. Device push (`expo-notifications` + token column — dep approval).
+4. Stored payment methods; universal links; empty/error polish.
 
-**Migration + seed** — `supabase/migrations/20260722000000_mobile_design_entities.sql` and `supabase/seed_demo.sql`. **Both applied to the hosted Supabase project** (additive only). Verified live: 11 products, 8 brands, 10 categories, 3 coupons, 2 active flash deals.
+## Standing decisions (do not reverse without asking)
 
-**Admin web** — new pages `apps/web/src/app/(admin)/admin/{brands,coupons,kyc}/page.tsx`, wired into the admin nav.
-
-## Deferred — pick up next (see [Phases](Phases.md))
-
-1. **Mobile Seller Central + KYC are UI-only** (pixel-faithful, representative data). Wire to the live API next. Blocker: buyer→seller role transition doesn't exist yet, so KYC can't submit for real.
-2. Seller **web** portal: show the seller their own KYC status.
-3. Payment-method storage (design's "Visa •4242" is presentational).
-4. Device push notifications (in-app feed exists; push does not).
-
-## Standing decisions (do not re-litigate)
-
-- **Mobile palette is forked** (green), web stays coral. Mobile-only by choice.
-- **Mobile shows no product photography** — generated gradient+emoji from `hue`.
-- **Seller anonymity holds** — product page shows platform identity + aggregates only; `brandName` (manufacturer) is allowed.
-- **Currency is USD** as designed (market is Pakistan/PKR — future config change).
-- **Payouts are a manual ledger**, not Stripe Connect transfers.
-- **Redis** is local in dev / managed in prod (Upstash dropped).
-- Private per-machine notes also live in Claude Code memory at `~/.claude/projects/<project>/memory/` (`mobile-design-decisions`, `payouts-ledger-only`, `redis-local-for-dev`, `no-claude-cli-installed`).
-
-## Gotchas learned
-
-- `apps/mobile` is Expo **SDK 57**: custom tab bars use headless `expo-router/ui` (`TabList`/`TabTrigger`/`TabSlot`); `@react-navigation/bottom-tabs` is not a direct dep. Read `docs.expo.dev/versions/v57.0.0/` before mobile work.
-- Filesystem is **case-insensitive** (macOS) — `Foo.md` and `foo.md` are the same file. Watch for collisions.
-- `DATABASE_URL` is a hosted project; the pooler host resolves reliably, the `DIRECT_URL` host was intermittently unresolvable. Never migrate/seed it without user approval.
+- **Self-serve seller onboarding is intentional.** Listing requires `isVerified`. Admin-invited sellers auto-verify on KYC submit; self-serve wait in `/admin/kyc`.
+- Payouts = manual ledger; currency USD.
+- Hybrid product images on mobile; Redis local in dev.
+- Same Supabase account works mobile ↔ `/seller` web.
+- Nest DB URLs use **Session pooler** (`aws-*.pooler.supabase.com:5432`).

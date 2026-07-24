@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CouponsService } from './coupons.service';
 
@@ -74,10 +75,17 @@ export class CouponsController {
    * A POST rather than a GET despite being read-only: the code and subtotal are
    * cart state, and putting a promo code in a URL leaves it in logs and history.
    */
-  @Roles('buyer')
+  @Roles('buyer', 'seller')
   @Post('coupons/validate')
   validate(@Body() dto: ValidateCouponDto) {
     return this.coupons.quote(dto.code, dto.subtotal);
+  }
+
+  /** Browseable promos for the Rewards screen — no auth required. */
+  @Public()
+  @Get('coupons')
+  listPublic() {
+    return this.coupons.listPublic();
   }
 
   @Roles('superadmin')

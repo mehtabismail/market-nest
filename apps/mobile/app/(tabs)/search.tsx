@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BuyerProductListItemDTO } from '@marketnest/shared-types';
@@ -37,16 +37,27 @@ export default function SearchScreen() {
   const params = useLocalSearchParams<{ q?: string }>();
 
   const [query, setQuery] = useState(params.q ?? '');
+  const [semantic, setSemantic] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const debounced = useDebounced(query, 250);
   const active = debounced.trim().length > 1;
 
-  const { data: results, loading } = useApi<ProductPage>(
-    active ? `/products?search=${encodeURIComponent(debounced.trim())}&limit=30` : null,
-    [debounced],
-  );
+  const searchUrl = useMemo(() => {
+    if (!active) return null;
+    const base = `/products?search=${encodeURIComponent(debounced.trim())}&limit=30`;
+    return semantic ? `${base}&semantic=true` : base;
+  }, [active, debounced, semantic]);
+
+  const { data: results, loading, reload } = useApi<ProductPage>(searchUrl, [searchUrl]);
   const { data: categories } = useApi<Category[]>('/categories');
 
   const items = results?.items ?? [];
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   return (
     <ScrollView
@@ -54,6 +65,14 @@ export default function SearchScreen() {
       contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 140 }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
     >
       <View style={styles.searchRow}>
         <PressableScale
@@ -88,6 +107,26 @@ export default function SearchScreen() {
           ) : null}
         </View>
       </View>
+
+      {active ? (
+        <PressableScale
+          accessibilityRole="switch"
+          accessibilityState={{ checked: semantic }}
+          onPress={() => setSemantic((s) => !s)}
+          style={[styles.smartToggle, { backgroundColor: semantic ? theme.accentWash : theme.card, borderColor: semantic ? theme.accent : theme.border }]}
+        >
+          <Text style={[styles.smartIcon, { color: semantic ? theme.accent : theme.textMuted }]}>✦</Text>
+          <Text style={[styles.smartLabel, { color: semantic ? theme.accent : theme.textMuted }]}>
+            Smart search
+          </Text>
+          <View
+            style={[
+              styles.smartIndicator,
+              { backgroundColor: semantic ? theme.accent : theme.border },
+            ]}
+          />
+        </PressableScale>
+      ) : null}
 
       {!active ? (
         <>
@@ -183,6 +222,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  smartToggle: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: radii.input,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  smartIcon: {
+    fontSize: 14,
+  },
+  smartLabel: {
+    flex: 1,
+    fontSize: size.small,
+    fontFamily: font.bodySemibold,
+  },
+  smartIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   backButton: {
     width: 38,

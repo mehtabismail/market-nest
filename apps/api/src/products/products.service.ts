@@ -62,15 +62,20 @@ export class ProductsService {
     private readonly semanticSearch: SemanticSearchService,
   ) {}
 
-  async listForBuyer(query: ListProductsQuery) {
+  async listForBuyer(query: ListProductsQuery, viewer?: RequestUser) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
+    // Sellers never browse their own catalogue as buyers — exclude by sellerId
+    // server-side so anonymity is preserved (no seller fields leave the API).
 
     if (query.search && query.semantic) {
       const { items, mode } = await this.semanticSearch.search(query.search, limit);
-      const productIds = items.map((dto) => dto.id);
+      const filtered = viewer?.sellerId
+        ? await this.dropOwnListings(items, viewer.sellerId)
+        : items;
+      const productIds = filtered.map((dto) => dto.id);
       const statsMap = await this.reviews.aggregateBatch(productIds);
-      const withReviews = items.map((dto) => {
+      const withReviews = filtered.map((dto) => {
         const stats = statsMap.get(dto.id) ?? { averageRating: null, reviewCount: 0 };
         return { ...dto, ...stats };
       });
@@ -88,16 +93,40 @@ export class ProductsService {
 
     const where: Prisma.ProductWhereInput = {
       status: 'published',
-      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      ...(query.search
-        ? {
-            OR: [
-              { title: { contains: query.search, mode: 'insensitive' } },
-              { description: { contains: query.search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
+      AND: [
+        ...(viewer?.sellerId
+          ? [{ OR: [{ sellerId: null }, { sellerId: { not: viewer.sellerId } }] }]
+          : []),
+        ...(query.categoryId ? [{ categoryId: query.categoryId }] : []),
+        ...(query.search
+          ? [
+              {
+                OR: [
+                  { title: { contains: query.search, mode: 'insensitive' as const } },
+                  { description: { contains: query.search, mode: 'insensitive' as const } },
+                ],
+              },
+            ]
+          : []),
+        ...(query.minPrice != null || query.maxPrice != null
+          ? [
+              {
+                price: {
+                  ...(query.minPrice != null ? { gte: query.minPrice } : {}),
+                  ...(query.maxPrice != null ? { lte: query.maxPrice } : {}),
+                },
+              },
+            ]
+          : []),
+      ],
     };
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
+      query.sort === 'price_asc'
+        ? { price: 'asc' }
+        : query.sort === 'price_desc'
+          ? { price: 'desc' }
+          : { createdAt: 'desc' };
 
     const [items, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -105,7 +134,7 @@ export class ProductsService {
         select: buildBuyerListSelect(),
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -128,18 +157,50 @@ export class ProductsService {
     };
   }
 
-  async getForBuyer(id: string): Promise<BuyerProductDTO> {
+  async getForBuyer(id: string, viewer?: RequestUser): Promise<BuyerProductDTO> {
     const product = await this.prisma.product.findFirst({
       where: { id, status: 'published' },
-      select: buildBuyerDetailSelect(),
+      select: { ...buildBuyerDetailSelect(), sellerId: true },
     });
     if (!product) throw new NotFoundException('Product not found');
     const stats = await this.reviews.aggregate(id);
+    const { sellerId: _sellerId, ...safe } = product;
     return {
-      ...toBuyerProductDTO(product),
+      ...toBuyerProductDTO(safe),
       averageRating: stats.averageRating ?? undefined,
       reviewCount: stats.reviewCount,
+      // Boolean only — never the seller id itself.
+      isOwnListing: Boolean(viewer?.sellerId && product.sellerId === viewer.sellerId),
     };
+  }
+
+  /** Strip semantic hits that belong to the viewing seller. */
+  private async dropOwnListings<T extends { id: string }>(
+    items: T[],
+    sellerId: string,
+  ): Promise<T[]> {
+    if (items.length === 0) return items;
+    const owned = await this.prisma.product.findMany({
+      where: { id: { in: items.map((i) => i.id) }, sellerId },
+      select: { id: true },
+    });
+    const ownedSet = new Set(owned.map((p) => p.id));
+    return items.filter((i) => !ownedSet.has(i.id));
+  }
+
+  /**
+   * Reject cart/wishlist when the authenticated seller owns the product.
+   * Guests and non-sellers are unaffected.
+   */
+  async assertNotOwnListing(productId: string, sellerId?: string | null) {
+    if (!sellerId) return;
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId },
+      select: { sellerId: true },
+    });
+    if (product?.sellerId && product.sellerId === sellerId) {
+      throw new BadRequestException('You cannot buy or save your own listing');
+    }
   }
 
   async getBuyerPreviewForAdmin(id: string): Promise<BuyerProductDTO> {
@@ -195,12 +256,46 @@ export class ProductsService {
 
   async createForSeller(user: RequestUser, dto: CreateProductDto) {
     if (!user.sellerId) throw new ForbiddenException('Seller profile required');
+    await this.assertSellerVerifiedToList(user.sellerId);
     return this.createProduct({
       ...dto,
       ownerType: 'seller_owned',
       sellerId: user.sellerId,
       status: dto.status ?? 'draft',
     });
+  }
+
+  /**
+   * Listings require KYC approval (`isVerified`). Self-serve sellers wait in
+   * the admin queue; admin-invited sellers auto-verify on KYC submit.
+   */
+  private async assertSellerVerifiedToList(sellerId: string) {
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+      select: {
+        isVerified: true,
+        kyc: { select: { status: true, rejectionReason: true } },
+      },
+    });
+    if (!seller) throw new ForbiddenException('Seller profile required');
+    if (seller.isVerified) return;
+
+    const kycStatus = seller.kyc?.status;
+    if (kycStatus === 'rejected') {
+      throw new ForbiddenException(
+        seller.kyc?.rejectionReason?.trim()
+          ? `Verification was rejected: ${seller.kyc.rejectionReason}. Update your application and resubmit.`
+          : 'Verification was rejected. Update your application and resubmit.',
+      );
+    }
+    if (kycStatus === 'submitted') {
+      throw new ForbiddenException(
+        'Your verification is pending admin review. You can list products once approved.',
+      );
+    }
+    throw new ForbiddenException(
+      'Complete seller verification before listing products.',
+    );
   }
 
   async createForAdmin(dto: CreateProductDto, adminId: string) {

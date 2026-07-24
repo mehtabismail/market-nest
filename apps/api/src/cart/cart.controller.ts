@@ -50,7 +50,7 @@ export class CartController {
     @GuestSession() guest: string | undefined,
     @CurrentUser() user?: RequestUser,
   ) {
-    return this.cart.addItem(dto, guest, user?.id);
+    return this.cart.addItem(dto, guest, user?.id, user?.sellerId);
   }
 
   @Public()

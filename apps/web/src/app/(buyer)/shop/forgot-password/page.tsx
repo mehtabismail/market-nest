@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { AuthError, AuthField, AuthLayout } from '@/components/auth/auth-layout';
+import { EmailInput } from '@/components/form-fields';
 import { apiFetch } from '@/lib/api';
+import { emailError } from '@marketnest/utils';
 
 export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +19,12 @@ export default function ForgotPasswordPage() {
     setError(null);
     setMessage(null);
     const fd = new FormData(form);
+    const mailErr = emailError(String(fd.get('email') ?? ''));
+    if (mailErr) {
+      setError(mailErr);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await apiFetch<{ message: string }>('/auth/forgot-password', {
@@ -46,7 +54,7 @@ export default function ForgotPasswordPage() {
       <h2 className="font-outfit text-xl font-bold mb-6">Forgot password</h2>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <AuthField label="Email">
-          <input className="input" name="email" type="email" placeholder="you@example.com" required />
+          <EmailInput name="email" required placeholder="you@example.com" />
         </AuthField>
         <AuthError message={error} />
         {message && (

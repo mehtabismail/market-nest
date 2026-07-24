@@ -6,8 +6,9 @@ export interface ApiClientConfig {
   baseUrl: string;
   storage: TokenStorage;
   /**
-   * Called when the API rejects the stored token. Platform decides what that
-   * means — the web app clears its auth context, mobile pops the sign-in stack.
+   * Called when the API rejects the stored token *and* refresh failed (or no
+   * refresh token exists). Platform decides what that means — the web app
+   * clears its auth context, mobile pops the sign-in stack.
    */
   onUnauthorized?: () => void;
   /**
@@ -24,21 +25,114 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   token?: string;
   /** Skip the Authorization header entirely. */
   anonymous?: boolean;
+  /** Internal: set after a successful token refresh retry. */
+  _retried?: boolean;
 }
 
 const API_PREFIX = '/api/v1';
+
+/**
+ * Detect multipart bodies across web and React Native.
+ *
+ * RN's FormData polyfill often fails `instanceof FormData` when the value
+ * crosses the Metro / workspace package boundary (app → `@marketnest/api-client`
+ * dist). Treating it as JSON then sets `Content-Type: application/json` on a
+ * multipart body, and fetch rejects with a bare "Network request failed" —
+ * which surfaces as "Could not reach the server" on KYC/product uploads.
+ */
+function isFormDataBody(body: BodyInit | null | undefined): boolean {
+  if (body == null || typeof body !== 'object') return false;
+  if (typeof FormData !== 'undefined' && body instanceof FormData) return true;
+  return Array.isArray((body as { _parts?: unknown })._parts);
+}
 
 export interface ApiClient {
   request<T>(path: string, options?: RequestOptions): Promise<T>;
   ensureGuestSession(): Promise<void>;
   mergeGuestCartIfPresent(token?: string): Promise<void>;
+  /** Persist access (+ optional refresh) after login/register. */
+  setSession(accessToken: string, refreshToken?: string | null): Promise<void>;
+  /** Clear both tokens locally (does not call the API). */
+  clearSession(): Promise<void>;
+}
+
+interface RefreshResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export function createApiClient(config: ApiClientConfig): ApiClient {
   const { baseUrl, storage, onUnauthorized, credentials } = config;
 
+  /** Single-flight: concurrent 401s share one refresh attempt. */
+  let refreshInFlight: Promise<boolean> | null = null;
+
+  async function clearSession(): Promise<void> {
+    await storage.clearToken();
+    await storage.clearRefreshToken();
+  }
+
+  async function setSession(accessToken: string, refreshToken?: string | null): Promise<void> {
+    await storage.setToken(accessToken);
+    // Always replace refresh on a new session so a prior user's token cannot linger.
+    if (refreshToken) {
+      await storage.setRefreshToken(refreshToken);
+    } else {
+      await storage.clearRefreshToken();
+    }
+  }
+
+  function isAuthBootstrapPath(path: string): boolean {
+    return (
+      path.startsWith('/auth/login') ||
+      path.startsWith('/auth/register') ||
+      path.startsWith('/auth/refresh') ||
+      path.startsWith('/auth/forgot-password') ||
+      path.startsWith('/auth/oauth') ||
+      path.startsWith('/auth/seller/setup-password')
+    );
+  }
+
+  async function tryRefreshAccessToken(): Promise<boolean> {
+    if (refreshInFlight) return refreshInFlight;
+
+    refreshInFlight = (async () => {
+      try {
+        const refreshToken = await storage.getRefreshToken();
+        if (!refreshToken) return false;
+
+        const res = await fetch(`${baseUrl}${API_PREFIX}/auth/refresh`, {
+          method: 'POST',
+          ...(credentials ? { credentials } : {}),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!res.ok) {
+          await clearSession();
+          return false;
+        }
+
+        const data = (await res.json()) as RefreshResponse;
+        if (!data.accessToken || !data.refreshToken) {
+          await clearSession();
+          return false;
+        }
+
+        await setSession(data.accessToken, data.refreshToken);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshInFlight = null;
+      }
+    })();
+
+    return refreshInFlight;
+  }
+
   async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { token, anonymous, headers, ...init } = options;
+    const { token, anonymous, headers, _retried, ...init } = options;
 
     // Attaching the token is opt-out, never opt-in. The API resolves a cart key
     // as "user id if present, otherwise guest session", so a cart request sent
@@ -46,7 +140,7 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     // the user cart — which made every checkout fail with "Cart is empty".
     const authToken = anonymous ? null : (token ?? (await storage.getToken()));
     const guest = await storage.getGuestSession();
-    const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
+    const isFormData = isFormDataBody(init.body);
 
     let res: Response;
     try {
@@ -54,6 +148,8 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
         ...init,
         ...(credentials ? { credentials } : {}),
         headers: {
+          // Never set Content-Type for FormData — the runtime must attach the
+          // multipart boundary itself.
           ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
           ...(guest ? { 'x-guest-session': guest } : {}),
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -66,16 +162,31 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     }
 
     if (!res.ok) {
+      // Expired access token: refresh once, then retry the original request.
+      // Skip bootstrap auth routes and already-retried calls to avoid loops.
+      if (
+        res.status === 401 &&
+        !_retried &&
+        !anonymous &&
+        !isAuthBootstrapPath(path)
+      ) {
+        const refreshed = await tryRefreshAccessToken();
+        if (refreshed) {
+          // Drop a stale explicit token override so the retry uses storage.
+          const { token: _stale, ...rest } = options;
+          return request<T>(path, { ...rest, _retried: true });
+        }
+        onUnauthorized?.();
+      } else if (res.status === 401) {
+        onUnauthorized?.();
+      }
+
       const body = (await res.json().catch(() => ({ message: res.statusText }))) as {
         message?: string | string[];
       };
       const detail = Array.isArray(body.message)
         ? body.message.join(', ')
         : (body.message ?? res.statusText ?? '');
-
-      if (res.status === 401) {
-        onUnauthorized?.();
-      }
 
       throw new ApiError(res.status, userFacingMessage(res.status, detail), detail);
     }
@@ -109,5 +220,5 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
     }
   }
 
-  return { request, ensureGuestSession, mergeGuestCartIfPresent };
+  return { request, ensureGuestSession, mergeGuestCartIfPresent, setSession, clearSession };
 }

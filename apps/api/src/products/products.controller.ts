@@ -7,11 +7,13 @@ import {
   Patch,
   Post,
   Query,
-  } from '@nestjs/common';
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { OptionalJwtGuard } from '../common/guards/optional-jwt.guard';
 import type { RequestUser } from '../auth/auth.types';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -21,20 +23,21 @@ import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto';
 
 @ApiTags('products')
+@UseGuards(OptionalJwtGuard)
 @Controller('products')
 export class ProductsController {
   constructor(private readonly products: ProductsService) {}
 
   @Public()
   @Get()
-  listBuyer(@Query() query: ListProductsQuery) {
-    return this.products.listForBuyer(query);
+  listBuyer(@Query() query: ListProductsQuery, @CurrentUser() user?: RequestUser) {
+    return this.products.listForBuyer(query, user);
   }
 
   @Public()
   @Get(':id')
-  getBuyer(@Param('id') id: string) {
-    return this.products.getForBuyer(id);
+  getBuyer(@Param('id') id: string, @CurrentUser() user?: RequestUser) {
+    return this.products.getForBuyer(id, user);
   }
 }
 

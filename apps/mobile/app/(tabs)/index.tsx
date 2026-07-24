@@ -1,11 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BuyerProductListItemDTO } from '@marketnest/shared-types';
 import { Icon } from '../../src/components/icon';
 import { PressableScale } from '../../src/components/pressable-scale';
+import {
+  ProductFilters,
+  filtersToParams,
+  type FilterState,
+} from '../../src/components/product-filters';
 import { ProductArt } from '../../src/components/product-tile';
 import { ProductCard } from '../../src/components/product-card';
 import { SectionHeading } from '../../src/components/section-heading';
@@ -33,16 +38,48 @@ interface ProductPage {
 
 const ALL = 'All';
 
+const DEFAULT_FILTERS: FilterState = {
+  categoryId: null,
+  minPrice: '',
+  maxPrice: '',
+  sort: 'newest',
+};
+
 export default function HomeScreen() {
   const { theme, isDark, toggle } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const wishlist = useWishlist();
   const [activeCategory, setActiveCategory] = useState(ALL);
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: page, loading } = useApi<ProductPage>('/products?limit=40');
+  const filterQuery = useMemo(() => {
+    const params = filtersToParams(filters);
+    return params ? `&${params}` : '';
+  }, [filters]);
+
+  const { data: page, loading, reload } = useApi<ProductPage>(`/products?limit=40${filterQuery}`, [filterQuery]);
   const { data: brands } = useApi<NamedRow[]>('/brands');
   const { data: categories } = useApi<NamedRow[]>('/categories');
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
+
+  function handleApplyFilters(newFilters: FilterState) {
+    setFilters(newFilters);
+    setFiltersVisible(false);
+    if (newFilters.categoryId) {
+      const cat = categories?.find((c) => c.id === newFilters.categoryId);
+      if (cat) setActiveCategory(cat.name);
+    } else {
+      setActiveCategory(ALL);
+    }
+  }
 
   const products = useMemo(() => page?.items ?? [], [page]);
 
@@ -75,13 +112,37 @@ export default function HomeScreen() {
       style={{ backgroundColor: theme.bg }}
       contentContainerStyle={{ paddingTop: insets.top + 4, paddingBottom: 140 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
     >
+      <ProductFilters
+        visible={filtersVisible}
+        onClose={() => setFiltersVisible(false)}
+        onApply={handleApplyFilters}
+        initial={filters}
+        categories={categories ?? []}
+      />
       <View style={styles.topRow}>
         <View style={styles.flex}>
           <Text style={[styles.greeting, { color: theme.textMuted }]}>{greeting()}</Text>
           <Text style={[styles.wordmark, { color: theme.text }]}>MarketNest</Text>
         </View>
         <View style={styles.topActions}>
+          <PressableScale
+            accessibilityRole="button"
+            accessibilityLabel="AI Assistant"
+            onPress={() => router.push('/assistant' as never)}
+            style={[styles.aiChip, { backgroundColor: theme.accentWash, borderColor: theme.accent }]}
+          >
+            <Text style={[styles.aiIcon, { color: theme.accent }]}>✦</Text>
+            <Text style={[styles.aiLabel, { color: theme.accent }]}>AI</Text>
+          </PressableScale>
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Notifications"
@@ -102,21 +163,28 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <PressableScale
-        accessibilityRole="search"
-        accessibilityLabel="Search products and brands"
-        onPress={() => router.push('/search' as never)}
-        style={[styles.searchBar, { backgroundColor: theme.card, borderColor: theme.border }]}
-      >
-        <Icon name="search" size={17} color={theme.textMuted} />
-        <Text style={[styles.searchPlaceholder, { color: theme.textFaint }]}>
-          Search products, brands…
-        </Text>
-        <View style={[styles.filterChip, { backgroundColor: theme.accentWash }]}>
+      <View style={[styles.searchBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <PressableScale
+          accessibilityRole="search"
+          accessibilityLabel="Search products and brands"
+          onPress={() => router.push('/search' as never)}
+          style={styles.searchTouchArea}
+        >
+          <Icon name="search" size={17} color={theme.textMuted} />
+          <Text style={[styles.searchPlaceholder, { color: theme.textFaint }]}>
+            Search products, brands…
+          </Text>
+        </PressableScale>
+        <PressableScale
+          accessibilityRole="button"
+          accessibilityLabel="Open filters"
+          onPress={() => setFiltersVisible(true)}
+          style={[styles.filterChip, { backgroundColor: theme.accentWash }]}
+        >
           <Icon name="filter" size={11} color={theme.accent} />
           <Text style={[styles.filterLabel, { color: theme.accent }]}>Filter</Text>
-        </View>
-      </PressableScale>
+        </PressableScale>
+      </View>
 
       {featured ? (
         <PressableScale
@@ -130,6 +198,7 @@ export default function HomeScreen() {
             category={featured.categoryName}
             isDark={isDark}
             glyphSize={96}
+            imageUrl={featured.thumbnail}
             style={styles.heroArt}
           >
             {/* Fixed dark scrim rather than a themed one: the artwork behind it
@@ -311,7 +380,18 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     lineHeight: size['3xl'] * 1.1,
   },
-  topActions: { flexDirection: 'row', gap: 10 },
+  topActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  aiChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  aiIcon: { fontSize: 12 },
+  aiLabel: { fontSize: size.small, fontFamily: font.bodyBold },
   iconButton: {
     width: 40,
     height: 40,
@@ -326,9 +406,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     paddingVertical: 11,
-    paddingHorizontal: 16,
+    paddingLeft: 16,
+    paddingRight: 10,
     borderRadius: radii.card,
     borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  searchTouchArea: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,

@@ -15,4 +15,9 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   fullName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { AuthError, AuthField, AuthLayout } from '@/components/auth/auth-layout';
+import { EmailInput } from '@/components/form-fields';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch, ensureGuestSession } from '@/lib/api';
 import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 import type { AuthSession } from '@marketnest/shared-types';
+import { emailError } from '@marketnest/utils';
 
 export default function BuyerLoginPage() {
   const router = useRouter();
@@ -24,6 +26,12 @@ export default function BuyerLoginPage() {
     setLoading(true);
     setError(null);
     const fd = new FormData(form);
+    const mailErr = emailError(String(fd.get('email') ?? ''));
+    if (mailErr) {
+      setError(mailErr);
+      setLoading(false);
+      return;
+    }
 
     try {
       const session = await apiFetch<AuthSession>('/auth/login', {
@@ -34,7 +42,10 @@ export default function BuyerLoginPage() {
           portal: 'buyer',
         }),
       });
-      await setSession(session.accessToken);
+      await setSession({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
       await ensureGuestSession();
       try {
         await apiFetch('/cart/merge', { method: 'POST', token: session.accessToken });
@@ -91,7 +102,7 @@ export default function BuyerLoginPage() {
       <div className="text-center text-xs text-gray my-4">or continue with email</div>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <AuthField label="Email">
-          <input className="input" name="email" type="email" placeholder="you@example.com" required />
+          <EmailInput name="email" required placeholder="you@example.com" />
         </AuthField>
         <AuthField label="Password">
           <input className="input" name="password" type="password" placeholder="Your password" required />

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Post,
+  Body,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestUser } from '../auth/auth.types';
 import { UploadService } from './upload.service';
+import { UploadBase64Dto } from './dto/upload-base64.dto';
 
 interface UploadedImageFile {
   buffer: Buffer;
@@ -20,11 +22,16 @@ interface UploadedImageFile {
 
 @ApiTags('upload')
 @ApiBearerAuth()
-@Roles('seller', 'superadmin')
+// Buyers need this during KYC onboarding; sellers for listing photos.
+@Roles('buyer', 'seller', 'superadmin')
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
+  /**
+   * Multipart upload — fine for web. React Native's FormData + fetch often
+   * fails with a bare "Network request failed", so mobile uses `image-base64`.
+   */
   @Post('image')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -38,5 +45,11 @@ export class UploadController {
     }
 
     return this.uploadService.uploadImage(file, user);
+  }
+
+  /** JSON base64 upload — the path mobile uses (avoids RN multipart bugs). */
+  @Post('image-base64')
+  uploadImageBase64(@Body() dto: UploadBase64Dto, @CurrentUser() user: RequestUser) {
+    return this.uploadService.uploadBase64(dto, user);
   }
 }

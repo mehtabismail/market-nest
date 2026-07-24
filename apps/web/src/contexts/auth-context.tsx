@@ -9,7 +9,14 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiFetch, mergeGuestCartIfPresent, UNAUTHORIZED_EVENT } from '@/lib/api';
+import type { AuthTokenPair } from '@marketnest/shared-types';
+import {
+  apiFetch,
+  clearPersistedSession,
+  mergeGuestCartIfPresent,
+  persistSession,
+  UNAUTHORIZED_EVENT,
+} from '@/lib/api';
 
 export type UserRole = 'buyer' | 'seller' | 'superadmin';
 
@@ -26,7 +33,15 @@ export interface AuthUser {
   fullName: string | null;
   phone?: string | null;
   avatarUrl?: string | null;
-  seller?: { id: string; storeName: string; storeSlug: string } | null;
+  seller?: {
+    id: string;
+    storeName: string;
+    storeSlug: string;
+    isVerified?: boolean;
+    status?: string;
+    kycStatus?: string | null;
+    rejectionReason?: string | null;
+  } | null;
 }
 
 interface AuthContextValue {
@@ -34,9 +49,10 @@ interface AuthContextValue {
   token: string | null;
   loading: boolean;
   isAuthenticated: boolean;
+  /** Re-load profile from `/auth/me` (token refresh is handled by the API client). */
   refresh: () => Promise<void>;
-  setSession: (token: string) => Promise<void>;
-  logout: () => void;
+  setSession: (session: AuthTokenPair) => Promise<AuthUser>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -56,14 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const me = await apiFetch<AuthUser>('/auth/me', { token: stored });
-      setToken(stored);
+      // Let the API client attach the token (and refresh on 401).
+      const me = await apiFetch<AuthUser>('/auth/me');
+      const latest = localStorage.getItem('mn_token') ?? stored;
+      setToken(latest);
       setUser(me);
-      // Recover a cart left behind in the guest namespace.
-      await mergeGuestCartIfPresent(stored);
+      await mergeGuestCartIfPresent(latest);
       window.dispatchEvent(new Event('cart-updated'));
     } catch {
-      localStorage.removeItem('mn_token');
+      await clearPersistedSession();
       setToken(null);
       setUser(null);
     } finally {
@@ -72,15 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
-  // The API rejected our token mid-session (expiry or revocation). Clear the
-  // session so surfaces render a sign-in prompt instead of failing silently
-  // against a token the server no longer accepts.
   useEffect(() => {
     const onUnauthorized = () => {
-      localStorage.removeItem('mn_token');
+      void clearPersistedSession();
       setToken(null);
       setUser(null);
       setLoading(false);
@@ -89,23 +103,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   }, []);
 
-  const setSession = useCallback(
-    async (accessToken: string) => {
-      localStorage.setItem('mn_token', accessToken);
-      setToken(accessToken);
-      setLoading(true);
-      try {
-        const me = await apiFetch<AuthUser>('/auth/me', { token: accessToken });
-        setUser(me);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  const setSession = useCallback(async (session: AuthTokenPair) => {
+    await persistSession(session.accessToken, session.refreshToken);
+    setToken(session.accessToken);
+    setLoading(true);
+    try {
+      const me = await apiFetch<AuthUser>('/auth/me', { token: session.accessToken });
+      setUser(me);
+      return me;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('mn_token');
+  const logout = useCallback(async () => {
+    const access = typeof window !== 'undefined' ? localStorage.getItem('mn_token') : null;
+    try {
+      await apiFetch('/auth/logout', {
+        method: 'POST',
+        anonymous: !access,
+        token: access ?? undefined,
+      });
+    } catch {
+      // Always clear locally.
+    }
+    await clearPersistedSession();
     setToken(null);
     setUser(null);
   }, []);

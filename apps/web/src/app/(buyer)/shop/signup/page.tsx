@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AuthError, AuthField, AuthLayout } from '@/components/auth/auth-layout';
+import { EmailInput } from '@/components/form-fields';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
 import type { AuthSession } from '@marketnest/shared-types';
+import { emailError } from '@marketnest/utils';
 
 export default function BuyerSignupPage() {
   const router = useRouter();
@@ -20,6 +22,12 @@ export default function BuyerSignupPage() {
     setLoading(true);
     setError(null);
     const fd = new FormData(form);
+    const mailErr = emailError(String(fd.get('email') ?? ''));
+    if (mailErr) {
+      setError(mailErr);
+      setLoading(false);
+      return;
+    }
 
     try {
       const session = await apiFetch<AuthSession>('/auth/register', {
@@ -30,7 +38,10 @@ export default function BuyerSignupPage() {
           fullName: fd.get('fullName'),
         }),
       });
-      await setSession(session.accessToken);
+      await setSession({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
       router.push('/shop');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -59,7 +70,7 @@ export default function BuyerSignupPage() {
           <input className="input" name="fullName" placeholder="Jane Doe" required />
         </AuthField>
         <AuthField label="Email">
-          <input className="input" name="email" type="email" placeholder="you@example.com" required />
+          <EmailInput name="email" required placeholder="you@example.com" />
         </AuthField>
         <AuthField label="Password">
           <input className="input" name="password" type="password" placeholder="Min. 8 characters" minLength={8} required />

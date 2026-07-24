@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
+import { PhoneInput } from '@/components/form-fields';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch, ensureGuestSession } from '@/lib/api';
 import { StripePayment } from '@/components/stripe-payment';
 import type { OrderDetailDTO, PaymentIntentResponse } from '@marketnest/shared-types/buyer';
+import { pkMobileError } from '@marketnest/utils';
 
 export function CheckoutForm() {
   const router = useRouter();
   const { token, user, loading: authLoading, isAuthenticated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
+  const [phone, setPhone] = useState('');
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: string;
     clientSecret: string;
@@ -32,6 +35,11 @@ export function CheckoutForm() {
       setError('Please sign in first');
       return;
     }
+    const phoneErr = pkMobileError(phone);
+    if (phoneErr) {
+      setError(phoneErr);
+      return;
+    }
     setLoading(true);
     setError(null);
     const fd = new FormData(e.currentTarget);
@@ -45,7 +53,7 @@ export function CheckoutForm() {
           paymentMethod,
           shippingAddress: {
             fullName: fd.get('fullName'),
-            phone: fd.get('phone'),
+            phone,
             line1: fd.get('line1'),
             line2: fd.get('line2') || undefined,
             city: fd.get('city'),
@@ -146,7 +154,7 @@ export function CheckoutForm() {
     <form onSubmit={handleCheckout} className="card p-6 space-y-4 max-w-lg">
       <h2 className="font-outfit font-bold">Shipping address</h2>
       <input className="input" name="fullName" placeholder="Full name" required />
-      <input className="input" name="phone" placeholder="Phone" required />
+      <PhoneInput value={phone} onChange={setPhone} required />
       <input className="input" name="line1" placeholder="Address line 1" required />
       <input className="input" name="line2" placeholder="Address line 2" />
       <div className="grid grid-cols-2 gap-3">
@@ -155,7 +163,7 @@ export function CheckoutForm() {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <input className="input" name="postalCode" placeholder="Postal code" required />
-        <input className="input" name="country" placeholder="Country" defaultValue="US" />
+        <input className="input" name="country" placeholder="Country" defaultValue="PK" />
       </div>
 
       <div>

@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BuyerProductListItemDTO } from '@marketnest/shared-types';
 import { ProductCard } from '../src/components/product-card';
@@ -13,6 +14,7 @@ interface WishlistEntry {
   title: string;
   price: number;
   comparePrice: number | null;
+  thumbnail: string | null;
   hue: number;
   category: string | null;
 }
@@ -21,7 +23,14 @@ export default function WishlistScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const wishlist = useWishlist();
-  const { data } = useApi<WishlistEntry[]>('/wishlist');
+  const { data, reload } = useApi<WishlistEntry[]>('/wishlist');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   const entries = data ?? [];
 
@@ -30,6 +39,14 @@ export default function WishlistScreen() {
       style={{ backgroundColor: theme.bg }}
       contentContainerStyle={{ paddingTop: insets.top + 4, paddingBottom: insets.bottom + 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
     >
       <ScreenHeader
         title="Wishlist"
@@ -56,7 +73,7 @@ export default function WishlistScreen() {
               title: entry.title,
               price: entry.price,
               comparePrice: entry.comparePrice,
-              thumbnail: null,
+              thumbnail: entry.thumbnail,
               isMarketNestOfficial: false,
               hue: entry.hue,
               categoryName: entry.category,

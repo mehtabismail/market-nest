@@ -6,6 +6,8 @@ import { Icon, type IconName } from '../../src/components/icon';
 import { PressableScale } from '../../src/components/pressable-scale';
 import { useAuth } from '../../src/contexts/auth-context';
 import { useTheme } from '../../src/contexts/theme-context';
+import { useApi } from '../../src/hooks/use-api';
+import { useWishlist } from '../../src/hooks/use-wishlist';
 import { avatarGradient, font, glow, radii, size } from '../../src/theme';
 
 interface MenuItem {
@@ -16,32 +18,46 @@ interface MenuItem {
   onPress?: () => void;
 }
 
+interface OrdersResponse {
+  items: unknown[];
+  total: number;
+}
+
+interface ReviewableResponse {
+  items: { productId: string }[];
+}
+
 export default function AccountScreen() {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, isSeller, signOut } = useAuth();
+  const wishlist = useWishlist();
 
-  const isSeller = Boolean(user?.seller);
+  const { data: ordersData } = useApi<OrdersResponse>(user ? '/orders' : null, [user?.id]);
+  const { data: reviewableData } = useApi<ReviewableResponse>(user ? '/reviews/reviewable' : null, [user?.id]);
+
+  const ordersCount = ordersData?.total ?? 0;
+  const wishlistCount = wishlist.ids.size;
+  const reviewsCount = reviewableData?.items?.length ?? 0;
 
   const buyerItems: MenuItem[] = [
     { icon: 'package', label: 'My Orders', meta: 'Track & manage', route: '/orders' },
     { icon: 'heart', label: 'Wishlist', meta: 'Saved items', route: '/wishlist' },
-    { icon: 'pin', label: 'Addresses', meta: 'Delivery locations' },
-    { icon: 'card', label: 'Payment Methods', meta: 'Visa •4242' },
+    { icon: 'pin', label: 'Addresses', meta: 'Delivery locations', route: '/addresses' },
   ];
 
   const sellerItems: MenuItem[] = [
     { icon: 'chart', label: 'Seller Dashboard', meta: 'Analytics & stats', route: '/seller' },
-    { icon: 'store', label: 'My Products', meta: 'Manage listings', route: '/seller' },
-    { icon: 'dollar', label: 'Payouts', meta: 'Earnings & history', route: '/seller' },
-    { icon: 'shield', label: 'KYC Status', meta: isSeller ? 'Verified ✓' : 'Get verified', route: '/kyc' },
+    { icon: 'store', label: 'My Products', meta: 'Manage listings', route: '/seller/listings' },
+    { icon: 'dollar', label: 'Payouts', meta: 'Earnings & history', route: '/seller/payouts' },
+    { icon: 'shield', label: 'KYC Status', meta: isSeller ? 'View status' : 'Get verified', route: '/kyc' },
   ];
 
   const accountItems: MenuItem[] = [
     { icon: 'bell', label: 'Notifications', route: '/notifications' },
-    { icon: 'gift', label: 'Rewards & Coupons' },
-    { icon: 'settings', label: 'Settings' },
+    { icon: 'gift', label: 'Rewards & Coupons', route: '/rewards' },
+    { icon: 'settings', label: 'Settings', route: '/settings' },
     {
       icon: 'signOut',
       label: user ? 'Sign Out' : 'Sign In',
@@ -70,7 +86,7 @@ export default function AccountScreen() {
           </Text>
           {isSeller ? (
             <View style={[styles.badge, { backgroundColor: theme.accentWash, borderColor: theme.accentGlow }]}>
-              <Text style={[styles.badgeText, { color: theme.accent }]}>⭐ Verified Seller</Text>
+              <Text style={[styles.badgeText, { color: theme.accent }]}>⭐ Seller Account</Text>
             </View>
           ) : null}
         </View>
@@ -78,6 +94,7 @@ export default function AccountScreen() {
           <PressableScale
             accessibilityRole="button"
             accessibilityLabel="Edit profile"
+            onPress={() => router.push('/profile-edit' as never)}
             style={[styles.editButton, { backgroundColor: theme.card, borderColor: theme.border }]}
           >
             <Icon name="edit" size={15} color={theme.text} />
@@ -88,9 +105,9 @@ export default function AccountScreen() {
       {/* Stats */}
       <View style={styles.stats}>
         {[
-          { label: 'Orders', value: '—' },
-          { label: 'Reviews', value: '—' },
-          { label: 'Wishlist', value: '—' },
+          { label: 'Orders', value: ordersCount.toString() },
+          { label: 'Reviews', value: reviewsCount.toString() },
+          { label: 'Wishlist', value: wishlistCount.toString() },
         ].map((stat) => (
           <View key={stat.label} style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.statValue, { color: theme.accent }]}>{stat.value}</Text>
@@ -100,7 +117,9 @@ export default function AccountScreen() {
       </View>
 
       <MenuGroup title="Buyer" items={buyerItems} />
-      <MenuGroup title="Seller Central" items={sellerItems} />
+      {/* Only shown once the account holds a store — the seller routes hit
+          seller-only endpoints, so a buyer would 403 on them. */}
+      {isSeller ? <MenuGroup title="Seller Central" items={sellerItems} /> : null}
       <MenuGroup title="Account" items={accountItems} />
 
       {/* Start selling CTA */}

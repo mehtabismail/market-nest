@@ -70,18 +70,26 @@ on getting a new developer running. Newest first.
 
 ---
 
-## Post-Phase 7 — Hardening and mobile
+## Post-Phase 7 — Hardening, mobile, seller lifecycle
 
-Tracked in git history rather than as a numbered phase.
+Tracked in git history and [MOBILE_IMPLEMENTATION_LOG.md](../MOBILE_IMPLEMENTATION_LOG.md).
+Open items: [MOBILE_REMAINING_FEATURES.md](../MOBILE_REMAINING_FEATURES.md).
 
 - Test harness (Jest) and CI quality gates — lint, typecheck and test now block
   merge
-- Auth fixes: `JwtAuthGuard` bypass on `POST /cart/merge`, buyer-only order routes,
-  role-scoped shop surfaces, typed API errors so raw 4xx no longer reach users
-- Order correctness: atomic stock claims (oversell race), idempotent payment
-  confirmation, cancellation claimed before restock
-- Cart fix: the web client omitted the auth token on cart requests, so items landed
-  in the guest cart while checkout read the user cart
-- Shared packages extracted: `@marketnest/api-client`, `@marketnest/tokens`
-  (replacing the unused `@marketnest/ui`)
-- Expo buyer app added at `apps/mobile`
+- Auth: access + refresh tokens (`POST /auth/refresh`, `/auth/logout`); shared
+  `@marketnest/api-client` refresh-on-401; buyer web logout
+- Order correctness: atomic stock claims, idempotent payment confirmation,
+  cancellation claimed before restock; buyer order status rollup from seller items
+- Cart / catalogue: guest-merge auth fix; sellers excluded from browsing own
+  listings; cart/wishlist reject own products
+- Shared packages: `@marketnest/api-client`, `@marketnest/tokens`, `@marketnest/utils`
+- Expo app (`apps/mobile`): buyer + seller surfaces, green design system
+- Seller lifecycle: self-serve onboarding + KYC (mobile + `/seller` web), listing
+  gate on `isVerified`, invite auto-verify on KYC submit, admin KYC notifications
+- In-app notification deep links across mobile / admin / seller web
+- DB: Nest uses Supabase Session pooler (`:5432`); avoid `db.*.supabase.co` for
+  Prisma from local/dev networks
+
+Deferred (dependency approval): mobile Stripe native, Google/Apple on mobile,
+device push.

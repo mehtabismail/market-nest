@@ -9,6 +9,8 @@
 5. [Design.md](Design.md) — the two design systems (web coral / mobile green), fonts, tokens
 6. [Memory.md](Memory.md) — what's done, what's in progress, what's deferred ← **update this when you finish**
 
+For mobile work, also see [MOBILE_IMPLEMENTATION_LOG.md](MOBILE_IMPLEMENTATION_LOG.md) (what shipped, file-level) and [MOBILE_REMAINING_FEATURES.md](MOBILE_REMAINING_FEATURES.md) (complete audit of every mobile screen — live vs. static — with how to finish each remaining feature).
+
 ## The five things that most often go wrong here
 
 1. **Seller anonymity** — buyer/guest routes never expose seller identity. See [Rules](Rules.md) §2 and [Architecture](Architecture.md) §3.

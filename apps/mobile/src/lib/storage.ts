@@ -14,6 +14,7 @@ import type { TokenStorage } from '@marketnest/api-client';
  */
 
 const TOKEN_KEY = 'mn_token';
+const REFRESH_KEY = 'mn_refresh';
 const GUEST_KEY = 'mn_guest_session';
 const THEME_KEY = 'mn_theme';
 
@@ -39,6 +40,10 @@ export const secureStorage: TokenStorage = {
   getToken: () => read(TOKEN_KEY),
   setToken: (token) => SecureStore.setItemAsync(TOKEN_KEY, token),
   clearToken: () => remove(TOKEN_KEY),
+
+  getRefreshToken: () => read(REFRESH_KEY),
+  setRefreshToken: (token) => SecureStore.setItemAsync(REFRESH_KEY, token),
+  clearRefreshToken: () => remove(REFRESH_KEY),
 
   getGuestSession: () => read(GUEST_KEY),
   setGuestSession: (id) => SecureStore.setItemAsync(GUEST_KEY, id),

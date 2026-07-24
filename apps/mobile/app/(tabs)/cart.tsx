@@ -13,8 +13,6 @@ import { useTheme } from '../../src/contexts/theme-context';
 import { api } from '../../src/lib/api';
 import { ctaGradient, font, formatPrice, glow, radii, size } from '../../src/theme';
 
-/** Flat shipping, matching the design's order summary. */
-const SHIPPING_FEE = 9.99;
 
 interface AppliedCoupon {
   code: string;
@@ -35,9 +33,7 @@ export default function CartScreen() {
   const items = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
   const discount = applied?.discount ?? 0;
-  // Shipping is waived on an empty cart so the total never shows a delivery
-  // charge for nothing.
-  const shipping = items.length > 0 ? SHIPPING_FEE : 0;
+  const shipping = cart?.shippingFee ?? 0;
   const total = Math.max(0, subtotal + shipping - discount);
 
   async function applyPromo() {
@@ -108,6 +104,7 @@ export default function CartScreen() {
                   category={line.product.categoryName}
                   isDark={isDark}
                   glyphSize={26}
+                  imageUrl={line.product.thumbnail}
                   style={styles.thumb}
                 />
 

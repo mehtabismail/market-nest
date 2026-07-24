@@ -14,7 +14,7 @@ _Last updated: 2026-07-22._ Tokens are the source of truth: [`packages/tokens/sr
 | Primary accent | Coral `#e8472a` | Green `#3dcf7a` (dark) / `#1b9456` (light) |
 | Canvas | Paper `#f5f3ee` | Near-black green `#060d09` (dark) / `#f1f7f3` (light) |
 | Tokens | `colors`, `dark`, `radii`, … | `mobileDark`, `mobileLight`, `mobileRadii`, … |
-| Photography | Real product images | **None** — generated gradient + emoji |
+| Photography | Real product images | Real image when present, generated gradient+emoji fallback |
 
 The mobile scale is **forked**, not shared — changing it must not repaint web, and vice versa. This was a deliberate decision (`mobile-design-decisions` memory). Import the right scale for the surface you're on.
 
@@ -36,9 +36,9 @@ Both themes ship because the app has a user-facing light/dark toggle (persisted)
 
 Fixed accents (both themes): star gold `#f59e0b` · sale red `#ef4444` · like `#f43f5e` · positive green `#22c55e`. CTA gradient = `accent → darker accent` (`ctaGradient()`); avatars use `avatarGradient()`; CTAs get a green glow (`glow()`).
 
-### Generated product artwork (mobile only)
+### Product artwork (mobile) — hybrid since 2026-07-23
 
-No seller photography is shown — a marketplace with inconsistent photos reads as one store only if nobody's photo is shown. Each product/category carries a `hue` (0–359); `ProductArt` renders an oklch-derived gradient with the category emoji floated at ~18% opacity over it. `oklchToHex` / `productTileStops` live in `packages/tokens/src/mobile.ts`. Do not replace this with `<Image>`.
+Originally the app shipped **no** photography (generated art only). That was reversed by user request: `ProductArt` (`apps/mobile/src/components/product-tile.tsx`) now renders the real uploaded image via `expo-image` when the product has one (`imageUrl` prop, fed from `thumbnail`/`images[0]`), and falls back to the generated artwork otherwise. Each product/category still carries a `hue` (0–359); the fallback renders an oklch-derived gradient with the category emoji floated at ~18% opacity over it (`oklchToHex` / `productTileStops` in `packages/tokens/src/mobile.ts`). Keep the gradient fallback — it is what keeps imageless and older listings coherent. Categories (no photos) always use the gradient art.
 
 ## Typography
 

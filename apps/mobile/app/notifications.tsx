@@ -1,6 +1,8 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { resolveNotificationHref } from '@marketnest/utils';
 import { Icon, type IconName } from '../src/components/icon';
 import { PressableScale } from '../src/components/pressable-scale';
 import { ScreenHeader } from '../src/components/screen-header';
@@ -32,6 +34,13 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { data, reload } = useApi<Notification[]>('/notifications');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   const items = data ?? [];
   const hasUnread = items.some((n) => n.readAt === null);
@@ -42,11 +51,25 @@ export default function NotificationsScreen() {
   }
 
   async function open(notification: Notification) {
+    const href = resolveNotificationHref({
+      type: notification.type,
+      link: notification.link,
+      portal: 'mobile',
+    });
+
     if (notification.readAt === null) {
-      // Fire-and-forget the read write; navigating should not wait on it.
-      void api.request(`/notifications/${notification.id}/read`, { method: 'PATCH' }).then(reload);
+      // Mark read before navigating so the badge clears even if the user
+      // does not come back to this list immediately.
+      try {
+        await api.request(`/notifications/${notification.id}/read`, { method: 'PATCH' });
+      } catch {
+        // Navigation still proceeds — a failed read mark is not blocking.
+      }
     }
-    if (notification.link) router.push(notification.link as never);
+
+    if (href) {
+      router.push(href as never);
+    }
   }
 
   return (
@@ -54,6 +77,14 @@ export default function NotificationsScreen() {
       style={{ backgroundColor: theme.bg }}
       contentContainerStyle={{ paddingTop: insets.top + 4, paddingBottom: insets.bottom + 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
     >
       <ScreenHeader
         title="Notifications"
@@ -77,6 +108,11 @@ export default function NotificationsScreen() {
         <View style={styles.list}>
           {items.map((notification) => {
             const unread = notification.readAt === null;
+            const href = resolveNotificationHref({
+              type: notification.type,
+              link: notification.link,
+              portal: 'mobile',
+            });
             return (
               <PressableScale
                 key={notification.id}
@@ -103,9 +139,11 @@ export default function NotificationsScreen() {
                   ) : null}
                   <Text style={[styles.rowTime, { color: theme.textFaint }]}>
                     {formatRelative(notification.createdAt)}
+                    {href ? ' · Tap to open' : ''}
                   </Text>
                 </View>
                 {unread ? <View style={[styles.unreadDot, { backgroundColor: theme.accent }]} /> : null}
+                {href ? <Icon name="chevronRight" size={14} color={theme.textFaint} /> : null}
               </PressableScale>
             );
           })}

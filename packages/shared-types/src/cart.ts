@@ -19,5 +19,7 @@ export interface CartDTO {
   id: string;
   items: CartLineDTO[];
   subtotal: number;
+  /** Flat shipping fee the checkout will charge. Zero when the cart is empty. */
+  shippingFee: number;
   itemCount: number;
 }

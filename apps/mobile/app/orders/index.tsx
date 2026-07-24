@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { OrderSummaryDTO } from '@marketnest/shared-types';
@@ -13,7 +14,14 @@ export default function OrdersScreen() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { data: orders, loading } = useApi<OrderSummaryDTO[]>('/orders');
+  const { data: orders, loading, reload } = useApi<OrderSummaryDTO[]>('/orders');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
 
   const list = orders ?? [];
 
@@ -22,6 +30,14 @@ export default function OrdersScreen() {
       style={{ backgroundColor: theme.bg }}
       contentContainerStyle={{ paddingTop: insets.top + 4, paddingBottom: insets.bottom + 40 }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
+          tintColor={theme.accent}
+          colors={[theme.accent]}
+        />
+      }
     >
       <ScreenHeader
         title="My Orders"
@@ -43,6 +59,7 @@ export default function OrdersScreen() {
           {list.map((order) => {
             const progress = orderProgress(order.status);
             const isTracking = progress.percent > 0 && progress.percent < 100;
+            const isCancelled = order.status === 'cancelled' || order.status === 'refunded';
             return (
               <PressableScale
                 key={order.id}
@@ -65,8 +82,22 @@ export default function OrdersScreen() {
                 </Text>
 
                 <View style={styles.statusRow}>
-                  <View style={[styles.statusPill, { backgroundColor: `${progress.color}18` }]}>
-                    <Text style={[styles.statusText, { color: progress.color }]}>{progress.stage}</Text>
+                  <View
+                    style={[
+                      styles.statusPill,
+                      isCancelled
+                        ? { backgroundColor: progress.color }
+                        : { backgroundColor: `${progress.color}18` },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: isCancelled ? '#ffffff' : progress.color },
+                      ]}
+                    >
+                      {progress.stage}
+                    </Text>
                   </View>
                   <Text style={[styles.total, { color: theme.accent }]}>{formatPrice(order.total)}</Text>
                 </View>

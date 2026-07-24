@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { AuthError, AuthField, AuthLayout } from '@/components/auth/auth-layout';
+import { EmailInput } from '@/components/form-fields';
 import { PageLoader } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
 import type { AuthSession } from '@marketnest/shared-types';
+import { emailError } from '@marketnest/utils';
 
 function SellerLoginForm() {
   const router = useRouter();
@@ -33,6 +35,12 @@ function SellerLoginForm() {
     setLoading(true);
     setError(null);
     const fd = new FormData(form);
+    const mailErr = emailError(String(fd.get('email') ?? ''));
+    if (mailErr) {
+      setError(mailErr);
+      setLoading(false);
+      return;
+    }
 
     try {
       const session = await apiFetch<AuthSession>('/auth/login', {
@@ -43,8 +51,15 @@ function SellerLoginForm() {
           portal: 'seller',
         }),
       });
-      await setSession(session.accessToken);
-      router.push(next);
+      const me = await setSession({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
+      if (me.seller && !me.seller.isVerified) {
+        router.push('/seller/kyc');
+      } else {
+        router.push(next);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -58,12 +73,20 @@ function SellerLoginForm() {
       title="Seller workspace"
       subtitle="Manage products, orders, and earnings from your dedicated seller dashboard."
       footer={
-        <p className="text-xs">
-          Invited by admin?{' '}
-          <Link href="/seller/set-password" className="text-teal font-semibold hover:underline">
-            Set your password
-          </Link>
-        </p>
+        <div className="space-y-1 text-xs">
+          <p>
+            New seller?{' '}
+            <Link href="/seller/signup" className="font-semibold text-teal hover:underline">
+              Become a seller
+            </Link>
+          </p>
+          <p>
+            Invited by admin?{' '}
+            <Link href="/seller/set-password" className="font-semibold text-teal hover:underline">
+              Set your password
+            </Link>
+          </p>
+        </div>
       }
     >
       <h2 className="font-outfit text-xl font-bold mb-2 text-teal-dark">Seller sign in</h2>
@@ -72,10 +95,12 @@ function SellerLoginForm() {
           Your seller account is activated. Sign in with the password you just set.
         </p>
       )}
-      <p className="text-xs text-gray mb-6">Seller accounts are invite-only from the platform admin.</p>
+      <p className="text-xs text-gray mb-6">
+        Sign in to manage your store. New sellers complete verification before listing products.
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField label="Email">
-          <input className="input" name="email" type="email" placeholder="seller@store.com" required />
+          <EmailInput name="email" required placeholder="seller@store.com" />
         </AuthField>
         <AuthField label="Password">
           <input className="input" name="password" type="password" placeholder="Your password" required />

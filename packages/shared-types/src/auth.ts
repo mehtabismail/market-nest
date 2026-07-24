@@ -9,6 +9,7 @@ export interface JwtPayload {
 
 export interface AuthSession {
   accessToken: string;
+  /** Present after password login/register/refresh. OAuth may omit until wired. */
   refreshToken?: string;
   user: {
     id: string;
@@ -17,3 +18,10 @@ export interface AuthSession {
     fullName: string | null;
   };
 }
+
+/** Payload accepted by clients when establishing a session. */
+export interface AuthTokenPair {
+  accessToken: string;
+  refreshToken?: string | null;
+}
+

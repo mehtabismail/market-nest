@@ -36,7 +36,7 @@ _Last updated: 2026-07-22._
 - **Do not run destructive or outward-facing actions** (delete data, send email, publish) without confirmation.
 - **No `any`, no `@ts-ignore`, no disabled lint rules** to make something compile. Fix the type.
 - **No secrets in code or logs.** Never paste `.env` values, tokens, or connection strings into output.
-- **Do not add photography to the mobile app.** It renders generated gradient+emoji artwork by design (see [Design](Design.md)).
+- **Mobile product artwork is now hybrid** (reversed 2026-07-23 by user request): show the real uploaded image when a product has one, and fall back to the generated gradient+emoji artwork when it does not. Sellers upload real photos in the add-product flow. Do not remove the gradient fallback — it is what keeps imageless/older listings coherent (see [Design](Design.md)).
 
 ## 3. Libraries & tools (use these, not alternatives)
 

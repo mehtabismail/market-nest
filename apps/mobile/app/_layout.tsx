@@ -43,6 +43,7 @@ function RootNavigator() {
             than continuing one, and both need the tab bar out of the way. */}
         <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
         <Stack.Screen name="sign-up" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="forgot-password" options={{ presentation: 'modal' }} />
         <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
         <Stack.Screen name="checkout" options={{ presentation: 'modal' }} />
       </Stack>

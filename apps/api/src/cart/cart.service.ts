@@ -14,6 +14,12 @@ const CART_TTL_SEC = 7 * 24 * 60 * 60; // 7 days
 const GUEST_PREFIX = 'cart:guest:';
 const USER_PREFIX = 'cart:user:';
 
+/**
+ * Flat shipping charged at checkout. Exported so orders and cart quote the
+ * same number — the mobile client must never invent its own fee.
+ */
+export const SHIPPING_FEE = 9.99;
+
 interface StoredCart {
   items: CartItemInput[];
 }
@@ -70,8 +76,11 @@ export class CartService {
     input: CartItemInput,
     guestSession?: string,
     userId?: string,
+    sellerId?: string,
   ): Promise<CartDTO> {
     if (input.quantity < 1) throw new BadRequestException('Quantity must be at least 1');
+
+    await this.products.assertNotOwnListing(input.productId, sellerId);
 
     const product = await this.products.getPublishedForPurchase(input.productId);
     if (product.stockQty < input.quantity) {
@@ -206,6 +215,14 @@ export class CartService {
       });
     }
 
-    return { id: cartId, items: lines, subtotal, itemCount };
+    return {
+      id: cartId,
+      items: lines,
+      subtotal,
+      // Empty carts show $0 shipping so the summary never implies a delivery
+      // charge for nothing; checkout still uses SHIPPING_FEE once there are lines.
+      shippingFee: itemCount > 0 ? SHIPPING_FEE : 0,
+      itemCount,
+    };
   }
 }

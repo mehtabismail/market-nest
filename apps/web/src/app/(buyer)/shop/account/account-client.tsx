@@ -1,10 +1,13 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthGate, WrongAccountGate } from '@/components/auth/auth-modal';
+import { PhoneInput } from '@/components/form-fields';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
+import { pkMobileError } from '@marketnest/utils';
 
 interface MeResponse {
   id: string;
@@ -40,8 +43,10 @@ interface AddressPayload {
 }
 
 export function AccountClient() {
-  const { token, user, loading: authLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { token, user, loading: authLoading, isAuthenticated, logout } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [addressMessage, setAddressMessage] = useState<string | null>(null);
@@ -84,6 +89,13 @@ export function AccountClient() {
     e.preventDefault();
     if (!token) return;
     setMessage(null);
+    if (profileForm.phone.trim()) {
+      const phoneErr = pkMobileError(profileForm.phone);
+      if (phoneErr) {
+        setMessage(phoneErr);
+        return;
+      }
+    }
     try {
       const updated = await apiFetch<MeResponse>('/auth/me', {
         method: 'PATCH',
@@ -101,11 +113,16 @@ export function AccountClient() {
     e.preventDefault();
     if (!token) return;
     setAddressMessage(null);
+    const phoneErr = pkMobileError(addressForm.phone);
+    if (phoneErr) {
+      setAddressMessage(phoneErr);
+      return;
+    }
     try {
       const updated = await apiFetch<{ addresses: Address[] }>('/buyer/addresses', {
         method: 'POST',
         token,
-        body: JSON.stringify(addressForm),
+        body: JSON.stringify({ ...addressForm, country: addressForm.country || 'PK' }),
       });
       setAddresses(updated.addresses ?? []);
       setAddressForm({
@@ -117,7 +134,7 @@ export function AccountClient() {
         city: '',
         state: '',
         postalCode: '',
-        country: '',
+        country: 'PK',
       });
       setAddressMessage('Address saved.');
     } catch (err) {
@@ -158,11 +175,31 @@ export function AccountClient() {
 
   if (error) return <p className="text-sm text-coral">{error}</p>;
 
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await logout();
+      router.push('/shop');
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="brand-text text-2xl mb-2">Account</h1>
-        <p className="text-sm text-gray">Manage your profile and saved shipping addresses.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="brand-text text-2xl mb-2">Account</h1>
+          <p className="text-sm text-gray">Manage your profile and saved shipping addresses.</p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-outline"
+          disabled={signingOut}
+          onClick={() => void handleSignOut()}
+        >
+          {signingOut ? 'Signing out…' : 'Sign out'}
+        </button>
       </div>
 
       <section className="card p-6">
@@ -176,14 +213,13 @@ export function AccountClient() {
               onChange={(e) => setProfileForm((prev) => ({ ...prev, fullName: e.target.value }))}
             />
           </label>
-          <label className="text-sm flex flex-col gap-1">
-            Phone
-            <input
-              className="input"
+          <div className="text-sm flex flex-col gap-1">
+            <span>Phone</span>
+            <PhoneInput
               value={profileForm.phone}
-              onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))}
+              onChange={(phone) => setProfileForm((prev) => ({ ...prev, phone }))}
             />
-          </label>
+          </div>
           <div className="sm:col-span-2 flex items-center gap-3">
             <button type="submit" className="btn btn-blue">
               Save profile
@@ -228,11 +264,10 @@ export function AccountClient() {
             value={addressForm.fullName}
             onChange={(e) => setAddressForm((prev) => ({ ...prev, fullName: e.target.value }))}
           />
-          <input
-            className="input"
-            placeholder="Phone"
+          <PhoneInput
             value={addressForm.phone}
-            onChange={(e) => setAddressForm((prev) => ({ ...prev, phone: e.target.value }))}
+            onChange={(phone) => setAddressForm((prev) => ({ ...prev, phone }))}
+            required
           />
           <input
             className="input"

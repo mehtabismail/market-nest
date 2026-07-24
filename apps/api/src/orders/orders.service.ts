@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { OrderDetailDTO, OrderSummaryDTO } from '@marketnest/shared-types';
-import { Prisma } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CartService } from '../cart/cart.service';
 import type { RequestUser } from '../auth/auth.types';
@@ -14,8 +14,8 @@ import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationFeedService } from '../notifications/notification-feed.service';
 import { CouponsService } from '../coupons/coupons.service';
+import { SHIPPING_FEE } from '../cart/cart.service';
 
-const SHIPPING_FEE = 5;
 /** Delivery window shown on the order tracker, in days from checkout. */
 const DELIVERY_MIN_DAYS = 3;
 const DELIVERY_MAX_DAYS = 6;
@@ -35,7 +35,7 @@ export class OrdersService {
     dto: CheckoutBodyDto,
     guestSession?: string,
   ) {
-    if (user.role !== 'buyer' && user.role !== 'superadmin') {
+    if (user.role !== 'buyer' && user.role !== 'seller') {
       throw new ForbiddenException('Buyer account required');
     }
 
@@ -163,6 +163,22 @@ export class OrdersService {
       void this.notifications.enqueueEmail('seller_new_order', { orderId: order.id, sellerId });
     }
 
+    // In-app feed for each seller who owns a line on this order.
+    const sellerUsers = await this.prisma.seller.findMany({
+      where: { id: { in: sellerIds }, userId: { not: null } },
+      select: { userId: true },
+    });
+    for (const seller of sellerUsers) {
+      if (!seller.userId) continue;
+      void this.feed.create({
+        userId: seller.userId,
+        type: 'order_update',
+        title: 'New order',
+        body: 'You have a new order to fulfil.',
+        link: '/seller/orders',
+      });
+    }
+
     return this.getBuyerOrder(user.id, order.id);
   }
 
@@ -170,10 +186,18 @@ export class OrdersService {
     const orders = await this.prisma.order.findMany({
       where: { buyerId: userId },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { items: true } } },
+      include: {
+        items: { select: { status: true } },
+        _count: { select: { items: true } },
+      },
     });
 
-    return orders.map((o) => this.toSummary(o, o._count.items));
+    return orders.map((o) =>
+      this.toSummary(
+        { ...o, status: this.aggregateOrderStatus(o.status, o.items.map((i) => i.status)) },
+        o._count.items,
+      ),
+    );
   }
 
   async getBuyerOrder(userId: string, orderId: string): Promise<OrderDetailDTO> {
@@ -191,7 +215,13 @@ export class OrdersService {
     });
 
     if (!order) throw new NotFoundException('Order not found');
-    return this.toDetail(order);
+    return this.toDetail({
+      ...order,
+      status: this.aggregateOrderStatus(
+        order.status,
+        order.items.map((i) => i.status),
+      ),
+    });
   }
 
   async cancelBuyerOrder(userId: string, orderId: string): Promise<OrderDetailDTO> {
@@ -313,9 +343,22 @@ export class OrdersService {
       },
     });
 
+    // Keep the parent order status in sync with item fulfilment so the buyer
+    // "My Orders" screen tracks the same progress the seller advances.
+    await this.syncOrderStatusFromItems(item.orderId);
+
     if (dto.status === 'shipped') {
       void this.notifications.enqueueEmail('order_shipped_buyer', {
         orderId: item.orderId,
+      });
+      void this.feed.create({
+        userId: item.order.buyerId,
+        type: 'order_update',
+        title: 'Order shipped',
+        body: dto.trackingNumber
+          ? `Tracking ${dto.trackingNumber}${dto.courierName ? ` · ${dto.courierName}` : ''}`
+          : 'Your order is on the way.',
+        link: `/orders/${item.orderId}`,
       });
     }
 
@@ -375,6 +418,51 @@ export class OrdersService {
     }
 
     return this.prisma.order.findUnique({ where: { id: orderId } });
+  }
+
+  /**
+   * Derive a single buyer-facing order status from line items.
+   *
+   * Sellers advance item statuses; historically the parent `orders.status` was
+   * left at `confirmed`, which made the buyer app look stuck. Prefer item
+   * progress when any line has moved past the order header, and never regress
+   * a cancelled/refunded order header.
+   */
+  private aggregateOrderStatus(orderStatus: string, itemStatuses: string[]): OrderStatus {
+    if (orderStatus === 'cancelled' || orderStatus === 'refunded') {
+      return orderStatus as OrderStatus;
+    }
+    if (itemStatuses.length === 0) return orderStatus as OrderStatus;
+
+    const active = itemStatuses.filter((s) => s !== 'cancelled' && s !== 'refunded');
+    if (active.length === 0) {
+      return itemStatuses.every((s) => s === 'refunded') ? OrderStatus.refunded : OrderStatus.cancelled;
+    }
+    if (active.every((s) => s === 'delivered')) return OrderStatus.delivered;
+    if (active.some((s) => s === 'shipped' || s === 'delivered')) return OrderStatus.shipped;
+    if (active.some((s) => s === 'processing')) return OrderStatus.processing;
+    if (active.some((s) => s === 'confirmed')) return OrderStatus.confirmed;
+    return orderStatus as OrderStatus;
+  }
+
+  private async syncOrderStatusFromItems(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, items: { select: { status: true } } },
+    });
+    if (!order) return;
+    if (order.status === 'cancelled' || order.status === 'refunded') return;
+
+    const next = this.aggregateOrderStatus(
+      order.status,
+      order.items.map((i) => i.status),
+    );
+    if (next !== order.status) {
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: { status: next },
+      });
+    }
   }
 
   private toSummary(

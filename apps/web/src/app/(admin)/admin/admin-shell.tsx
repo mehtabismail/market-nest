@@ -23,6 +23,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/auth/auth-guard';
+import { AdminNotificationBell } from '@/components/admin/admin-notification-bell';
 import { PortalShell } from '@/components/portal-shell';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -74,10 +75,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mn-cream text-mn-gold">
                 <ShieldUser className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-semibold text-mn-ink">{user?.fullName ?? 'Super Admin'}</div>
                 <div className="text-[10px] text-mn-mid">Platform</div>
               </div>
+              <AdminNotificationBell />
             </div>
             <nav className="flex max-h-[calc(100vh-12rem)] flex-col gap-1 overflow-y-auto">
               {nav.map((item) => {
@@ -116,16 +118,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   <p className="text-[10px] uppercase tracking-wide text-mn-mid">Super Admin</p>
                   <p className="text-sm font-semibold text-mn-gold">{activeNavItem?.label ?? 'Dashboard'}</p>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline"
-                  onClick={() => {
-                    logout();
-                    router.push('/admin/login');
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <AdminNotificationBell />
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                      logout();
+                      router.push('/admin/login');
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
                 {nav.map((item) => {

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -89,31 +88,9 @@ export class ReviewsService {
   }
 
   async create(buyerId: string, productId: string, rating: number, body?: string) {
-    const delivered = await this.prisma.orderItem.findFirst({
-      where: {
-        productId,
-        order: { buyerId, status: 'delivered' },
-      },
-    });
-
-    if (!delivered) {
-      const anyDelivered = await this.prisma.orderItem.findFirst({
-        where: {
-          productId,
-          order: { buyerId },
-          status: 'delivered',
-        },
-      });
-      if (!anyDelivered) {
-        throw new ForbiddenException('You can only review products from delivered orders');
-      }
-    }
-
-    const existing = await this.prisma.review.findUnique({
-      where: { productId_buyerId: { productId, buyerId } },
-    });
-    if (existing) {
-      throw new BadRequestException('You already reviewed this product');
+    const eligibility = await this.eligibility(buyerId, productId);
+    if (!eligibility.canReview) {
+      throw new ForbiddenException(eligibility.reason ?? 'You cannot review this product');
     }
 
     const product = await this.prisma.product.findFirst({
@@ -124,6 +101,38 @@ export class ReviewsService {
     return this.prisma.review.create({
       data: { productId, buyerId, rating, body },
     });
+  }
+
+  /**
+   * Single source of truth for "may this buyer write a review".
+   * Requires a delivered order line for the product and no existing review.
+   */
+  async eligibility(buyerId: string, productId: string) {
+    const existing = await this.prisma.review.findUnique({
+      where: { productId_buyerId: { productId, buyerId } },
+      select: { id: true },
+    });
+    if (existing) {
+      return { canReview: false, reason: 'You already reviewed this product' as const };
+    }
+
+    const delivered = await this.prisma.orderItem.findFirst({
+      where: {
+        productId,
+        status: 'delivered',
+        order: { buyerId },
+      },
+      select: { id: true },
+    });
+
+    if (!delivered) {
+      return {
+        canReview: false,
+        reason: 'You can only review products from delivered orders' as const,
+      };
+    }
+
+    return { canReview: true as const, reason: null };
   }
 
   async reviewableProducts(buyerId: string) {

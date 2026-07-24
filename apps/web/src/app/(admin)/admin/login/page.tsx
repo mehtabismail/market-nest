@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { AuthError, AuthField, AuthLayout } from '@/components/auth/auth-layout';
+import { EmailInput } from '@/components/form-fields';
 import { PageLoader } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { apiFetch } from '@/lib/api';
 import type { AuthSession } from '@marketnest/shared-types';
+import { emailError } from '@marketnest/utils';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -23,6 +25,12 @@ function AdminLoginForm() {
     setLoading(true);
     setError(null);
     const fd = new FormData(form);
+    const mailErr = emailError(String(fd.get('email') ?? ''));
+    if (mailErr) {
+      setError(mailErr);
+      setLoading(false);
+      return;
+    }
 
     try {
       const session = await apiFetch<AuthSession>('/auth/login', {
@@ -33,7 +41,10 @@ function AdminLoginForm() {
           portal: 'admin',
         }),
       });
-      await setSession(session.accessToken);
+      await setSession({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
       router.push(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -56,7 +67,7 @@ function AdminLoginForm() {
       <h2 className="font-outfit text-xl font-bold mb-6 text-purple-dark">Admin sign in</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField label="Admin email">
-          <input className="input" name="email" type="email" placeholder="admin@marketnest.com" required />
+          <EmailInput name="email" required placeholder="admin@marketnest.com" />
         </AuthField>
         <AuthField label="Password">
           <input className="input" name="password" type="password" placeholder="Your password" required />

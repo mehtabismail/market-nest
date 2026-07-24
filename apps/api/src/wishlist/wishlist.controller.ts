@@ -5,9 +5,10 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../auth/auth.types';
 import { WishlistService } from './wishlist.service';
 
+// Buyers and sellers: a seller is also a shopper and keeps a wishlist.
 @ApiTags('wishlist')
 @ApiBearerAuth()
-@Roles('buyer')
+@Roles('buyer', 'seller')
 @Controller('wishlist')
 export class WishlistController {
   constructor(private readonly wishlist: WishlistService) {}
@@ -24,7 +25,7 @@ export class WishlistController {
 
   @Post(':productId')
   add(@CurrentUser() user: RequestUser, @Param('productId', ParseUUIDPipe) productId: string) {
-    return this.wishlist.add(user.id, productId);
+    return this.wishlist.add(user.id, productId, user.sellerId);
   }
 
   @Delete(':productId')

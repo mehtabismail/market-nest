@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '@marketnest/api-client';
 import type { AuthSession } from '@marketnest/shared-types';
+import { emailError } from '@marketnest/utils';
 import { Icon } from '../src/components/icon';
+import { EmailField } from '../src/components/form-fields';
 import { PressableScale } from '../src/components/pressable-scale';
 import { useAuth } from '../src/contexts/auth-context';
 import { useTheme } from '../src/contexts/theme-context';
@@ -25,6 +27,11 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
+    const mailErr = emailError(email);
+    if (mailErr) {
+      setError(mailErr);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -33,7 +40,10 @@ export default function SignInScreen() {
         body: JSON.stringify({ email: email.trim(), password }),
         anonymous: true,
       });
-      await signIn(session.accessToken);
+      await signIn({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
       // replace, not back: a fresh sign-in should not leave the modal in the
       // stack for a swipe-back to return to.
       router.replace('/' as never);
@@ -70,18 +80,7 @@ export default function SignInScreen() {
           </Text>
         </View>
 
-        <Field label="Email Address">
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="your@email.com"
-            placeholderTextColor={theme.textFaint}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-          />
-        </Field>
+        <EmailField label="Email Address" value={email} onChange={setEmail} required />
 
         <Field label="Password">
           <View style={styles.passwordWrap}>
@@ -109,7 +108,13 @@ export default function SignInScreen() {
           </View>
         </Field>
 
-        <Text style={[styles.forgot, { color: theme.accent }]}>Forgot password?</Text>
+        <PressableScale
+          accessibilityRole="link"
+          haptic={null}
+          onPress={() => router.push('/forgot-password' as never)}
+        >
+          <Text style={[styles.forgot, { color: theme.accent }]}>Forgot password?</Text>
+        </PressableScale>
 
         {error ? <Text style={[styles.error, { color: theme.textMuted }]}>{error}</Text> : null}
 
@@ -136,13 +141,16 @@ export default function SignInScreen() {
             { glyph: '🍎', label: 'Apple' },
             { glyph: '🔍', label: 'Google' },
           ].map((provider) => (
-            <View
+            <PressableScale
               key={provider.label}
+              accessibilityRole="button"
+              accessibilityLabel={`Sign in with ${provider.label}`}
+              onPress={() => Alert.alert('Coming Soon', `${provider.label} sign-in will be available in a future update.`)}
               style={[styles.social, { backgroundColor: theme.card, borderColor: theme.border }]}
             >
               <Text style={styles.socialGlyph}>{provider.glyph}</Text>
               <Text style={[styles.socialLabel, { color: theme.text }]}>{provider.label}</Text>
-            </View>
+            </PressableScale>
           ))}
         </View>
 

@@ -43,9 +43,10 @@ Minimum keys:
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
-DATABASE_URL=postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true
+DATABASE_URL=postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:5432/postgres?connection_limit=5&connect_timeout=15
 DIRECT_URL=postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:5432/postgres
-# Use Session pooler (5432), not db.[ref].supabase.co (often IPv6-only → Prisma P1001)
+# Nest = long-lived → Session pooler (:5432). Avoid db.[ref].supabase.co (IPv6 P1001).
+# Transaction pooler (:6543) is for serverless only — slow/flaky with PrismaClient.
 REDIS_URL=redis://...
 NEXT_PUBLIC_API_URL=http://localhost:3001
 ```

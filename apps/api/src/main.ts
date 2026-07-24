@@ -1,11 +1,18 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+
+  // Default express JSON limit is 100kb — far too small for mobile base64 image
+  // uploads (`POST /upload/image-base64`). 8mb covers a 5MB decoded image with
+  // base64 overhead. Stripe webhooks still get `rawBody` via Nest's option above.
+  app.useBodyParser('json', { limit: '8mb' });
+  app.useBodyParser('urlencoded', { limit: '8mb', extended: true });
 
   const http = app.getHttpAdapter().getInstance();
   if (typeof http.set === 'function') {

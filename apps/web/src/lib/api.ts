@@ -14,9 +14,10 @@ import {
 } from '@marketnest/api-client';
 
 const TOKEN_KEY = 'mn_token';
+const REFRESH_KEY = 'mn_refresh';
 const GUEST_KEY = 'mn_guest_session';
 
-/** Broadcast when the API rejects a token, so AuthProvider can clear the session. */
+/** Broadcast when the API rejects a token *and* refresh failed. */
 export const UNAUTHORIZED_EVENT = 'mn:unauthorized';
 
 export { ApiError };
@@ -30,6 +31,9 @@ const webStorage: TokenStorage = {
   getToken: async () => read(TOKEN_KEY),
   setToken: async (token) => localStorage.setItem(TOKEN_KEY, token),
   clearToken: async () => localStorage.removeItem(TOKEN_KEY),
+  getRefreshToken: async () => read(REFRESH_KEY),
+  setRefreshToken: async (token) => localStorage.setItem(REFRESH_KEY, token),
+  clearRefreshToken: async () => localStorage.removeItem(REFRESH_KEY),
   getGuestSession: async () => read(GUEST_KEY),
   setGuestSession: async (id) => localStorage.setItem(GUEST_KEY, id),
   clearGuestSession: async () => localStorage.removeItem(GUEST_KEY),
@@ -64,4 +68,12 @@ export function ensureGuestSession(): Promise<void> {
 
 export function mergeGuestCartIfPresent(token: string): Promise<void> {
   return client.mergeGuestCartIfPresent(token);
+}
+
+export function persistSession(accessToken: string, refreshToken?: string | null): Promise<void> {
+  return client.setSession(accessToken, refreshToken);
+}
+
+export function clearPersistedSession(): Promise<void> {
+  return client.clearSession();
 }

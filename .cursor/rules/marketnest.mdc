@@ -33,7 +33,7 @@ Further reference: `docs/ARCHITECTURE_PRINCIPLES.md`, `AGENTS.md`, `README.md`, 
 
 1. **Seller anonymity**: Buyers never receive `seller_id`, store name, slug, or contact. Use `BuyerProductDTO` + `ProductSerializerInterceptor` on all buyer/guest routes. Buyer app must not import seller types from `shared-types`.
 2. **Product ownership**: `seller_owned` | `platform_owned` | `seller_assigned`. Platform-owned ? admin fulfilment, no payout. Only `platform_owned` shows "MarketNest Official" badge.
-3. **Roles**: `superadmin` | `seller` | `buyer`. Sellers created by admin only. Guest cart in Redis (7d TTL), merge at checkout.
+3. **Roles**: `superadmin` | `seller` | `buyer`. Sellers via **admin invite** or **self-serve onboarding**; listing requires `isVerified`. Guest cart in Redis (7d TTL), merge at checkout.
 
 ## Code patterns
 
