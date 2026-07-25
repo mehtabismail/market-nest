@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { Reveal } from '@/components/ui/motion';
 
 interface Category {
   id: string;
@@ -15,31 +17,29 @@ export function AnimatedCategories({
   categories: Category[];
   activeSlug?: string;
 }) {
+  const chips = [{ id: '__all', name: 'All', slug: '' }, ...categories];
+
   return (
-    <section className="mb-10 shop-reveal">
-      <div className="mb-4 flex items-center justify-between">
+    <Reveal as="section" className="mb-12">
+      <div className="mb-5 flex items-center justify-between">
         <h2 className="shop-section-title">Shop by category</h2>
         <Link
           href="/shop/search"
-          className="text-sm font-semibold text-mn-teal transition-colors hover:text-mn-accent"
+          className="group inline-flex items-center gap-1 text-sm font-semibold text-mn-accent transition-colors hover:text-mn-accent-2"
         >
           Browse all
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href="/shop"
-          className={activeSlug ? 'shop-chip' : 'shop-chip shop-chip-active'}
-        >
-          All
-        </Link>
-        {categories.map((c) => {
-          const isActive = activeSlug === c.slug;
+      <div className="flex flex-wrap gap-2.5">
+        {chips.map((c) => {
+          const isActive = c.slug ? activeSlug === c.slug : !activeSlug;
+          const href = c.slug ? `/shop?category=${c.slug}` : '/shop';
           return (
             <Link
               key={c.id}
-              href={`/shop?category=${c.slug}`}
+              href={href}
               className={isActive ? 'shop-chip shop-chip-active' : 'shop-chip'}
             >
               {c.name}
@@ -47,6 +47,6 @@ export function AnimatedCategories({
           );
         })}
       </div>
-    </section>
+    </Reveal>
   );
 }

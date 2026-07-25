@@ -6,17 +6,20 @@ _Last updated: 2026-07-22._ Tokens are the source of truth: [`packages/tokens/sr
 
 ---
 
-## There are TWO design systems. Do not mix them.
+## Design systems — three surfaces. Do not mix them.
 
-| | **Web** (buyer/seller/admin) | **Mobile** (Expo app) |
-|---|---|---|
-| Identity | Warm editorial — ink on paper | Green editorial — glow on green-black |
-| Primary accent | Coral `#e8472a` | Green `#3dcf7a` (dark) / `#1b9456` (light) |
-| Canvas | Paper `#f5f3ee` | Near-black green `#060d09` (dark) / `#f1f7f3` (light) |
-| Tokens | `colors`, `dark`, `radii`, … | `mobileDark`, `mobileLight`, `mobileRadii`, … |
-| Photography | Real product images | Real image when present, generated gradient+emoji fallback |
+| | **Web buyer + seller** ("Spatial Glass") | **Web admin** | **Mobile** (Expo app) |
+|---|---|---|---|
+| Identity | Dark immersive — glass + aurora + 3D | Warm editorial — ink on paper | Green editorial — glow on green-black |
+| Primary accent | Electric violet `#8D7CFF` → fuchsia `#D65CF0` | Coral `#e8472a` | Green `#3dcf7a` / `#1b9456` |
+| Canvas | Near-black violet `#080710` | Paper `#f5f3ee` | Near-black green `#060d09` / `#f1f7f3` |
+| Tokens | `--mn-*` channels scoped to `.shop-theme, .seller-theme` | `--mn-*` channels (`:root` coral defaults) | `mobileDark`, `mobileLight`, … |
+| Type | Syne / Plus Jakarta Sans / Instrument Serif | Syne / Plus Jakarta Sans | Cormorant Garamond / DM Sans |
+| Chrome | Buyer: floating glass dock + HUD + footer. Seller: dark glass sidebar. | Sticky bar + sidebar | Tab bar |
 
-The mobile scale is **forked**, not shared — changing it must not repaint web, and vice versa. This was a deliberate decision (`mobile-design-decisions` memory). Import the right scale for the surface you're on.
+**Spatial Glass (2026-07-24)** — dark immersive redesign of buyer + seller web (admin stays coral). Floating glass chrome, fixed aurora mesh, cursor spotlight, 3D-tilt glass panels. The whole buyer/seller surface re-hues from ~14 CSS-variable channels in [`apps/web/src/styles/marketnest-theme.css`](apps/web/src/styles/marketnest-theme.css) — see [Memory.md](Memory.md) "Spatial Glass". Accents (on dark): violet `#8D7CFF` · fuchsia `#D65CF0` · gold `#F0C064` (ratings/Official) · emerald `#34D6A2` (success/trust) · rose `#FB6078` (deals) · text `#F4F1FB` · muted `#A8A0C4`. **Motion rule:** entrance reveals are transform-only (never opacity) so content is always visible; framer-motion is reserved for interaction only.
+
+The mobile scale is **forked**, not shared — changing it must not repaint web, and vice versa (`mobile-design-decisions` memory). Import the right scale for the surface you're on.
 
 ---
 

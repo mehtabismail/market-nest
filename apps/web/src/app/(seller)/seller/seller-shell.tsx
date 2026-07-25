@@ -15,6 +15,7 @@ import {
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { PortalShell } from '@/components/portal-shell';
 import { SellerNotificationBell } from '@/components/seller/seller-notification-bell';
+import { ShopAtmosphere } from '@/components/shop/shop-atmosphere';
 import { useAuth } from '@/contexts/auth-context';
 
 const nav = [
@@ -49,10 +50,11 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard loginPath="/seller/login" requiredRole={['seller', 'superadmin']} publicPaths={PUBLIC_PATHS}>
       <PortalShell portal="seller" title="Seller Portal">
+        <ShopAtmosphere />
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-1">
-          <aside className="hidden w-56 shrink-0 border-r border-mn-border bg-white p-4 md:block">
+          <aside className="hidden w-56 shrink-0 border-r border-white/10 bg-white/[0.03] p-4 backdrop-blur-xl md:block">
             <div className="mb-6 flex items-center gap-2 px-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mn-teal text-sm font-bold text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-grad text-sm font-bold text-white shadow-glow-sm">
                 {initial}
               </div>
               <div className="min-w-0 flex-1">
@@ -93,12 +95,12 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
               Sign out
             </button>
           </aside>
-          <div className="flex-1 animate-fade-in bg-mn-paper">
-            <header className="sticky top-0 z-10 border-b border-mn-border bg-mn-paper/95 px-4 py-3 backdrop-blur md:hidden">
+          <div className="flex-1 animate-fade-in">
+            <header className="mn-glass sticky top-0 z-10 border-b border-white/10 px-4 py-3 md:hidden">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-wide text-mn-mid">Seller Portal</p>
-                  <p className="text-sm font-semibold text-mn-teal">{activeNavItem?.label ?? 'Dashboard'}</p>
+                  <p className="font-syne text-sm font-bold text-mn-ink">{activeNavItem?.label ?? 'Dashboard'}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <SellerNotificationBell />

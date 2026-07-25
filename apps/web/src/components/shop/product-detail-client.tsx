@@ -93,8 +93,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   onClick={() => changeImage(index)}
                   className={`relative aspect-square overflow-hidden rounded-xl border-2 bg-gray-light transition-all ${
                     selectedImageIndex === index
-                      ? 'border-mn-teal ring-2 ring-mn-teal/20'
-                      : 'border-border hover:border-mn-teal/50'
+                      ? 'border-mn-accent ring-2 ring-mn-accent/25'
+                      : 'border-border hover:border-mn-accent/50'
                   }`}
                 >
                   {image ? (
@@ -105,7 +105,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     />
                   ) : null}
                   {selectedImageIndex === index && (
-                    <div className="absolute inset-0 bg-mn-teal/10" />
+                    <div className="absolute inset-0 bg-mn-accent/10" />
                   )}
                 </button>
               ))}
@@ -113,9 +113,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           )}
         </div>
 
-        <div className="animate-slide-up rounded-2xl border border-border/60 bg-white p-5 shadow-sm sm:p-7">
+        <div className="animate-slide-up rounded-[28px] border border-mn-border bg-mn-surface p-5 shadow-md sm:p-7">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <h1 className="brand-text text-2xl tracking-tighter text-mn-ink sm:text-3xl">
+            <h1 className="font-syne text-2xl font-extrabold tracking-tight text-mn-ink sm:text-[2rem]">
               {product.title}
             </h1>
             {product.isMarketNestOfficial && <OfficialBadge />}
@@ -129,16 +129,14 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           )}
 
           <div className="mb-4 flex items-baseline gap-3">
-            <p className="price-lg bg-gradient-to-r from-mn-teal to-mn-teal/80 bg-clip-text text-3xl text-transparent">
+            <p className="mn-grad-text font-mono text-3xl font-semibold tabular-nums tracking-tight">
               ${product.price.toFixed(2)}
             </p>
             {product.comparePrice && (
               <p className="text-mn-mid line-through">${product.comparePrice.toFixed(2)}</p>
             )}
             {discount && (
-              <span className="badge bg-gradient-to-r from-mn-accent to-mn-accent/90 font-bold text-white">
-                -{discount}%
-              </span>
+              <span className="badge bg-mn-rose font-bold text-white">-{discount}%</span>
             )}
           </div>
 

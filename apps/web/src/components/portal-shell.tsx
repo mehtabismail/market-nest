@@ -31,15 +31,18 @@ export function PortalShell({
 }) {
   const subtitle = title || portalSubtitle[portal];
 
+  const isPremium = portal !== 'admin';
+
   return (
     <div className={`${portalTheme[portal]} min-h-screen flex flex-col`}>
-      <header className="sticky top-0 z-50 border-b border-mn-border bg-mn-paper/90 backdrop-blur-md">
+      <header className="mn-glass sticky top-0 z-50 border-b border-mn-ink/[0.06]">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
           <Link
             href={portalHome[portal]}
-            className="font-outfit text-xl font-extrabold tracking-tight text-mn-ink"
+            className="font-syne text-xl font-extrabold tracking-tight text-mn-ink"
           >
-            Market<span className="text-mn-accent">Nest</span>
+            Market
+            <span className={isPremium ? 'mn-grad-text' : 'text-mn-accent'}>Nest</span>
           </Link>
           <span className="hidden text-sm font-medium text-mn-mid sm:inline">{subtitle}</span>
         </div>

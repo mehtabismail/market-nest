@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "apps/web"],
+      "port": 3000
+    },
+    {
+      "name": "arca-design-ref",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4599",
+        "--directory",
+        "/private/tmp/claude-501/-Users-muhammadjahanzaib-Documents-mehtab-Abdullah-Idea/d6463398-901c-44f6-b5d6-0e63f751672e/scratchpad/arca"
+      ],
+      "port": 4599
+    }
+  ]
+}

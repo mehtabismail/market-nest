@@ -9,6 +9,27 @@
   --bg: #f5f3ee;
   --gray-dark: #0e0f11;
   --border: #d5d0c7;
+
+  /*
+   * Default `mn-*` palette (coral / paper). Consumed by Tailwind as
+   * rgb(var(--mn-*) / <alpha>) — values are space-separated RGB channels.
+   * Admin and any unscoped surface stay on this; the premium Lumen palette is
+   * scoped to `.shop-theme, .seller-theme` in marketnest-theme.css.
+   */
+  --mn-ink: 14 15 17;
+  --mn-paper: 245 243 238;
+  --mn-cream: 237 233 225;
+  --mn-surface: 255 255 255;
+  --mn-accent: 232 71 42;
+  --mn-accent-soft: 253 232 228;
+  --mn-accent-2: 200 151 58;
+  --mn-gold: 200 151 58;
+  --mn-gold-soft: 253 243 225;
+  --mn-teal: 26 107 90;
+  --mn-teal-soft: 224 240 235;
+  --mn-rose: 232 71 42;
+  --mn-mid: 107 104 96;
+  --mn-border: 213 208 199;
 }
 
 body {
@@ -42,18 +63,24 @@ body {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { transform: translateY(6px); }
+  to { transform: translateY(0); }
 }
 
+/*
+ * Transform-only (no opacity) on purpose: content must stay visible even when
+ * the animation clock never advances — e.g. a tab that loads while backgrounded,
+ * where the compositor freezes CSS animations at their `from` state. A slide
+ * with an opacity fade would leave content invisible in that case.
+ */
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(14px); }
+  to { transform: translateY(0); }
 }
 
 @keyframes shop-reveal {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
 }
 
 @layer components {

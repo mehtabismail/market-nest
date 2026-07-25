@@ -31,7 +31,9 @@ export function SearchClient({ initialQuery, useSemantic, sort, searchParams }: 
 
   return (
     <div className="animate-fade-in">
-      <h1 className="brand-text mb-2 text-2xl text-mn-ink sm:text-3xl">Search products</h1>
+      <h1 className="font-syne mb-2 text-2xl font-extrabold tracking-tight text-mn-ink sm:text-3xl">
+        Search products
+      </h1>
       <p className="mb-6 text-sm text-mn-mid">
         {useSemantic
           ? 'AI semantic search finds products by meaning (requires indexed products).'
@@ -41,7 +43,7 @@ export function SearchClient({ initialQuery, useSemantic, sort, searchParams }: 
       <form
         className={`mb-5 flex flex-wrap items-center gap-3 rounded-2xl border bg-white p-3 shadow-lg transition-all duration-300 ${
           isFocused
-            ? 'border-mn-teal/50 shadow-xl shadow-mn-teal/10 ring-4 ring-mn-teal/10'
+            ? 'border-mn-accent/50 shadow-xl shadow-mn-accent/10 ring-4 ring-mn-accent/10'
             : 'border-border/60 shadow-md'
         }`}
         action="/shop/search"
@@ -50,7 +52,7 @@ export function SearchClient({ initialQuery, useSemantic, sort, searchParams }: 
         <div className="relative min-w-[220px] flex-1">
           <Search
             className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${
-              isFocused ? 'text-mn-teal' : 'text-mn-mid'
+              isFocused ? 'text-mn-accent' : 'text-mn-mid'
             }`}
           />
           <input
@@ -77,15 +79,15 @@ export function SearchClient({ initialQuery, useSemantic, sort, searchParams }: 
           )}
         </div>
 
-        <button type="submit" className="btn btn-primary rounded-full shadow-md shadow-mn-teal/20 transition-shadow hover:shadow-lg hover:shadow-mn-teal/30">
+        <button type="submit" className="btn btn-primary rounded-full">
           Search
         </button>
 
         <label
           className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2.5 text-sm transition-all ${
             useSemantic
-              ? 'border-mn-teal bg-gradient-to-r from-mn-teal-soft to-mn-teal-soft/80 text-mn-teal'
-              : 'border-border bg-gray-light text-mn-mid hover:border-mn-teal/50'
+              ? 'border-mn-accent bg-mn-accent-soft text-mn-accent'
+              : 'border-border bg-gray-light text-mn-mid hover:border-mn-accent/50'
           }`}
         >
           <input
@@ -120,8 +122,8 @@ export function SearchClient({ initialQuery, useSemantic, sort, searchParams }: 
               href={queryString(searchParams, { sort: sortOption })}
               className={`relative overflow-hidden rounded-full border px-4 py-2 text-xs font-semibold transition-all ${
                 isActive
-                  ? 'border-mn-teal bg-mn-teal text-white shadow-md shadow-mn-teal/20'
-                  : 'border-border bg-white text-mn-ink hover:border-mn-teal/35 hover:bg-mn-teal-soft'
+                  ? 'border-transparent bg-accent-grad text-white shadow-glow-sm'
+                  : 'border-border bg-white text-mn-ink hover:border-mn-accent/35 hover:bg-mn-accent-soft'
               }`}
             >
               {labels[sortOption]}

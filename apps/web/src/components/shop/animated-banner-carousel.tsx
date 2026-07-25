@@ -13,7 +13,9 @@ interface Banner {
 
 const AUTO_MS = 3000;
 
-export function AnimatedBannerCarousel({ banners }: { banners: Banner[] }) {
+export function AnimatedBannerCarousel({ banners: rawBanners }: { banners: Banner[] }) {
+  // Guard against banners with a missing image — next/Image throws on empty src.
+  const banners = rawBanners.filter((b) => b.imageUrl && b.imageUrl.trim().length > 0);
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -88,7 +90,7 @@ export function AnimatedBannerCarousel({ banners }: { banners: Banner[] }) {
                   type="button"
                   onClick={() => setIndex(idx)}
                   className={`h-2 rounded-full transition-all ${
-                    idx === index ? 'w-6 bg-mn-teal' : 'w-2 bg-mn-border hover:bg-mn-mid/40'
+                    idx === index ? 'w-6 bg-accent-grad' : 'w-2 bg-mn-border hover:bg-mn-mid/40'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
